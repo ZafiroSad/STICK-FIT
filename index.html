@@ -545,12 +545,13 @@ function load(){
         localStorage.setItem(KEY,JSON.stringify(raw));
       }
       raw.weightLog=raw.weightLog||[];
+      raw.measures=raw.measures||[];
       if(raw.weightGoal===undefined)raw.weightGoal=null;
       return raw;
     }
   }catch(e){}
   return {onboarded:false,seedVersion:SEED_VERSION,activeRoutineId:SEED_ROUTINE.id,routines:[structuredClone(SEED_ROUTINE)],
-    customEx:[],imgUrls:{},checks:{},history:[],profile:null,weightLog:[],weightGoal:null};
+    customEx:[],imgUrls:{},checks:{},history:[],profile:null,weightLog:[],weightGoal:null,measures:[]};
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(S));}
 function allEx(){return [...SEED_EX,...(S.customEx||[])];}
@@ -784,11 +785,11 @@ function renderRutinas(){
   $("#v-rutinas").querySelectorAll("[data-routine]").forEach(c=>c.onclick=()=>openRoutine(c.dataset.routine));
 }
 function createRoutine(){
-  const name=prompt("Nombre de la nueva rutina:","Mi rutina");
-  if(!name)return;
-  const days={};DAYS.forEach(([id])=>days[id]=d("Descanso",true,[]));
-  const r={id:uid(),name:name.trim(),days};
-  S.routines.push(r);save();renderRutinas();openRoutine(r.id);toast("Rutina creada");
+  promptSheet({title:"Nueva rutina",label:"Nombre",value:"Mi rutina",placeholder:"Ej. Fuerza, Volumen, Viaje",cta:"Crear",onSave:name=>{
+    const days={};DAYS.forEach(([id])=>days[id]=d("Descanso",true,[]));
+    const r={id:uid(),name:name,days};
+    S.routines.push(r);save();renderRutinas();openRoutine(r.id);toast("Rutina creada");
+  }});
 }
 function openRoutine(rid){
   const r=S.routines.find(x=>x.id===rid);if(!r)return;
@@ -820,9 +821,9 @@ function openRoutine(rid){
   if(S.routines.length>1)h+=`<button class="btn-danger" style="width:100%;margin-top:8px" id="delR">Eliminar rutina</button>`;
   openSheet(h);
   const act=$("#activate");if(act)act.onclick=()=>{S.activeRoutineId=r.id;save();closeSheet();renderRutinas();renderHoy();toast("Rutina activada");};
-  $("#renameR").onclick=()=>{const n=prompt("Nuevo nombre:",r.name);if(n){r.name=n.trim();save();openRoutine(rid);renderRutinas();}};
+  $("#renameR").onclick=()=>promptSheet({title:"Renombrar rutina",label:"Nombre",value:r.name,cta:"Guardar",onSave:n=>{r.name=n;save();openRoutine(rid);renderRutinas();}});
   $("#dupR").onclick=()=>{const c=structuredClone(r);c.id=uid();c.name=r.name+" (copia)";S.routines.push(c);save();closeSheet();renderRutinas();toast("Rutina duplicada");};
-  const del=$("#delR");if(del)del.onclick=()=>{if(confirm("¿Eliminar esta rutina?")){S.routines=S.routines.filter(x=>x.id!==rid);if(S.activeRoutineId===rid)S.activeRoutineId=S.routines[0].id;save();closeSheet();renderRutinas();renderHoy();toast("Rutina eliminada");}};
+  const del=$("#delR");if(del)del.onclick=()=>confirmSheet({title:"Eliminar rutina",message:`¿Eliminar "${r.name}"? Esta acción no se puede deshacer.`,cta:"Eliminar",danger:true,onConfirm:()=>{S.routines=S.routines.filter(x=>x.id!==rid);if(S.activeRoutineId===rid)S.activeRoutineId=S.routines[0].id;save();closeSheet();renderRutinas();renderHoy();toast("Rutina eliminada");}});
   $("#sheet").querySelectorAll("[data-edit-day]").forEach(b=>b.onclick=()=>editDay(rid,b.dataset.editDay));
 }
 function editDay(rid,dayId){
@@ -943,7 +944,7 @@ function openExercise(exId){
   if((S.customEx||[]).some(c=>c.id===exId))h+=`<button class="btn-danger" style="width:100%;margin-top:8px" id="delEx">Eliminar ejercicio</button>`;
   openSheet(h);
   $("#saveImg").onclick=()=>{const v=$("#imgUrl").value.trim();if(v)S.imgUrls[exId]=v;else delete S.imgUrls[exId];save();openExercise(exId);toast(v?"Imagen guardada":"Imagen quitada");};
-  const de=$("#delEx");if(de)de.onclick=()=>{if(confirm("¿Eliminar este ejercicio del catálogo?")){S.customEx=S.customEx.filter(c=>c.id!==exId);save();closeSheet();renderEjercicios();toast("Ejercicio eliminado");}};
+  const de=$("#delEx");if(de)de.onclick=()=>confirmSheet({title:"Eliminar ejercicio",message:"¿Eliminar este ejercicio del catálogo?",cta:"Eliminar",danger:true,onConfirm:()=>{S.customEx=S.customEx.filter(c=>c.id!==exId);save();closeSheet();renderEjercicios();toast("Ejercicio eliminado");}});
 }
 function createExercise(){
   let h=`<div class="sheet-grab"></div><div class="sheet-head"><div class="h2">Nuevo ejercicio</div><button class="close-x" data-close>×</button></div>
@@ -1074,8 +1075,11 @@ function renderProgreso(){
   let h=`<div class="view-head"><div class="label">Tu evolución</div><div class="h1" style="margin-top:2px">Progreso</div>
     <div class="sub" style="margin-top:4px">Registra tu peso y tus cargas; la app estima si vas en línea con la meta.</div></div>`;
   h+=weightBlock();
+  h+=measuresBlock();
   h+=`<div class="label-mono section-gap" style="margin-bottom:10px">Fuerza por ejercicio</div>`;
   h+=strengthBlock();
+  h+=`<div class="label-mono section-gap" style="margin-bottom:10px">Volumen semanal · rutina activa</div>`;
+  h+=volumeBlock();
   h+=backupCard();
   $("#v-progreso").innerHTML=h;
   bindProgreso();
@@ -1178,6 +1182,7 @@ function lastEntry(exId){const l=(S.history||[]).filter(x=>x.exId===exId&&x.weig
 function bindProgreso(){
   const lw=$("#logWeight");if(lw)lw.onclick=openWeightSheet;
   const eg=$("#editGoal");if(eg)eg.onclick=openGoalSheet;
+  const lm=$("#logMeasure");if(lm)lm.onclick=openMeasureSheet;
   const ed=$("#expData");if(ed)ed.onclick=exportData;
   const im=$("#impData"),imf=$("#impFile");
   if(im&&imf){im.onclick=()=>imf.click();imf.onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value="";};}
@@ -1216,6 +1221,87 @@ function openGoalSheet(){
   };
 }
 
+/* ---------- Medidas corporales ---------- */
+const MEASURES=[["cintura","Cintura"],["pecho","Pecho"],["brazo","Brazo"],["muslo","Muslo"]];
+function measuresBlock(){
+  const logs=(S.measures||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+  let h=`<div class="card section-gap" style="padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="h3">Medidas corporales</div>
+      <button class="btn-secondary" id="logMeasure" style="padding:8px 13px">Registrar</button>
+    </div>`;
+  const hasAny=logs.some(l=>MEASURES.some(([k])=>l[k]!=null));
+  if(!hasAny){
+    h+=`<div class="empty" style="padding:12px 8px"><p class="sub">Registra cintura, pecho, brazo y muslo (cm) para ver la recomposición, no solo el peso.</p></div></div>`;
+    return h;
+  }
+  h+=`<div>`;
+  MEASURES.forEach(([k,label])=>{
+    const series=logs.filter(l=>l[k]!=null);
+    if(!series.length)return;
+    const first=series[0][k],last=series[series.length-1][k];
+    const delta=+(last-first).toFixed(1);
+    h+=`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid rgba(63,63,70,.25)">
+      <div style="flex:1;min-width:0"><div class="h3" style="font-size:14px">${label}</div>
+        <div class="mono" style="font-size:11px;color:${delta<0?'var(--emerald)':delta>0?'var(--sky)':'var(--zinc-500)'}">${delta>0?'+':''}${delta} cm</div></div>
+      <div style="width:110px">${series.length>=2?sparkline(series.map(s=>s[k]),"#a1a1aa"):'<span class="muted" style="font-size:11px">1 registro</span>'}</div>
+      <div class="mono" style="font-weight:800;font-size:16px;min-width:54px;text-align:right">${last}<small style="color:var(--zinc-500);font-size:11px"> cm</small></div>
+    </div>`;
+  });
+  h+=`</div></div>`;
+  return h;
+}
+function openMeasureSheet(){
+  const last=(S.measures||[]).slice(-1)[0]||{};
+  openSheet2(`<div class="sheet-grab"></div><div class="sheet-head"><div class="h2">Registrar medidas</div><button class="close-x" data-close>×</button></div>
+    <p class="muted" style="margin:6px 0 14px">En centímetros. Deja en blanco lo que no midas hoy.</p>
+    <div class="row2">
+      <div class="field"><label>Cintura</label><input type="number" inputmode="decimal" id="m-cintura" placeholder="${last.cintura||'cm'}"></div>
+      <div class="field"><label>Pecho</label><input type="number" inputmode="decimal" id="m-pecho" placeholder="${last.pecho||'cm'}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Brazo</label><input type="number" inputmode="decimal" id="m-brazo" placeholder="${last.brazo||'cm'}"></div>
+      <div class="field"><label>Muslo</label><input type="number" inputmode="decimal" id="m-muslo" placeholder="${last.muslo||'cm'}"></div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:6px" id="m-save">Guardar</button>`);
+  $("#m-save").onclick=()=>{
+    const date=todayKey();
+    const existing=(S.measures||[]).find(l=>l.date===date)||{};
+    const entry=Object.assign({},existing,{date});let any=false;
+    MEASURES.forEach(([k])=>{const v=parseFloat($("#m-"+k).value);if(v){entry[k]=v;any=true;}});
+    if(!any)return toast("Ingresa al menos una medida");
+    S.measures=(S.measures||[]).filter(l=>l.date!==date);S.measures.push(entry);
+    save();closeSheet2();renderProgreso();toast("Medidas registradas");
+  };
+}
+
+/* ---------- Volumen semanal por grupo muscular ---------- */
+function weeklyVolume(){
+  const r=activeRoutine();const vol={};GROUPS.forEach(g=>vol[g]=0);
+  Object.values(r.days).forEach(day=>{if(day.rest)return;(day.exercises||[]).forEach(it=>{const e=getEx(it.exId);if(e&&vol[e.group]!=null)vol[e.group]+=(+it.sets||0);});});
+  return vol;
+}
+function volumeBlock(){
+  const vol=weeklyVolume();
+  const total=Object.values(vol).reduce((a,b)=>a+b,0);
+  if(!total)return `<div class="card" style="padding:20px;text-align:center"><p class="sub">La rutina activa no tiene ejercicios asignados. Añádelos en Rutinas para ver tu volumen semanal.</p></div>`;
+  const max=Math.max(20,...Object.values(vol));
+  let h=`<div class="card" style="padding:18px">`;
+  GROUPS.forEach(g=>{
+    const v=vol[g];const pct=Math.round(v/max*100);
+    const col=v===0?'var(--zinc-700)':v<10?'var(--amber-250)':v<=20?'var(--emerald)':'var(--sky)';
+    h+=`<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span class="mono" style="font-size:12px;font-weight:700;color:var(--zinc-300)">${g}</span>
+        <span class="mono" style="font-size:12px;font-weight:800">${v}<small class="muted"> series</small></span>
+      </div>
+      <div class="bar"><i style="width:${pct}%;background:${col}"></i></div>
+    </div>`;
+  });
+  h+=`<p class="muted" style="margin-top:4px">Referencia hipertrofia: <b style="color:var(--zinc-400)">10-20 series</b> por grupo/semana. <span style="color:var(--amber-250)">ámbar</span>=bajo · <span style="color:var(--emerald)">verde</span>=óptimo · <span style="color:var(--sky)">azul</span>=alto.</p></div>`;
+  return h;
+}
+
 /* ---------- Respaldo de datos (export / import) ---------- */
 function backupCard(){
   return `<div class="card section-gap" style="padding:16px">
@@ -1244,11 +1330,12 @@ function importData(file){
   r.onload=()=>{
     let obj;try{obj=JSON.parse(r.result);}catch(e){return toast("Archivo inválido");}
     if(!obj||!Array.isArray(obj.routines))return toast("Respaldo no válido");
-    if(!confirm("Esto reemplazará tus datos actuales con los del respaldo. ¿Continuar?"))return;
-    obj.onboarded=true;
-    localStorage.setItem(KEY,JSON.stringify(obj));
-    toast("Datos restaurados");
-    setTimeout(()=>location.reload(),450);
+    confirmSheet({title:"Restaurar respaldo",message:"Esto reemplazará tus datos actuales con los del respaldo.",cta:"Restaurar",danger:true,onConfirm:()=>{
+      obj.onboarded=true;
+      localStorage.setItem(KEY,JSON.stringify(obj));
+      toast("Datos restaurados");
+      setTimeout(()=>location.reload(),450);
+    }});
   };
   r.readAsText(file);
 }
@@ -1305,6 +1392,24 @@ function openSheet2(html){$("#sheet2").innerHTML=html;$("#overlay2").classList.a
   $("#sheet2").querySelectorAll("[data-close]").forEach(b=>b.onclick=closeSheet2);}
 function closeSheet2(){$("#overlay2").classList.remove("open");}
 $("#overlay2").onclick=e=>{if(e.target===$("#overlay2"))closeSheet2();};
+
+/* Hojas reutilizables (reemplazan prompt()/confirm() nativos) */
+function promptSheet(o){
+  openSheet2(`<div class="sheet-grab"></div><div class="sheet-head"><div class="h2">${o.title}</div><button class="close-x" data-close>×</button></div>
+    <div class="field" style="margin-top:12px"><label>${o.label||""}</label><input type="text" id="ps-input" value="${(o.value||"").replace(/"/g,"&quot;")}" placeholder="${o.placeholder||""}"></div>
+    <button class="btn-primary" style="width:100%" id="ps-save">${o.cta||"Guardar"}</button>`);
+  const inp=$("#ps-input");inp.focus();try{inp.select();}catch(_){}
+  $("#ps-save").onclick=()=>{const v=inp.value.trim();if(!v)return toast("Escribe un nombre");closeSheet2();o.onSave(v);};
+}
+function confirmSheet(o){
+  openSheet2(`<div class="sheet-grab"></div><div class="sheet-head"><div class="h2">${o.title}</div><button class="close-x" data-close>×</button></div>
+    <p class="sub" style="margin:8px 0 18px">${o.message||""}</p>
+    <div style="display:flex;gap:8px">
+      <button class="btn-secondary" style="flex:1" data-close>Cancelar</button>
+      <button class="${o.danger?"btn-danger":"btn-primary"}" style="flex:1" id="cs-ok">${o.cta||"Confirmar"}</button>
+    </div>`);
+  $("#cs-ok").onclick=()=>{closeSheet2();o.onConfirm();};
+}
 
 /* ---------- Toast ---------- */
 let toastT;

@@ -10,7 +10,11 @@ celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-M
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual
-- **Versión:** 1.3.2 — QA integral (23 checks) en vivo, sin errores de consola.
+- **Versión:** 1.4.0 — QA en vivo (9/9 nuevas + regresiones), sin errores de consola.
+- v1.4.0 (Tier 2 + pulido): **Hojas del sistema** en vez de `prompt()`/`confirm()` nativos
+  (`promptSheet`/`confirmSheet` sobre `#overlay2`). **Medidas corporales** en Progreso (cintura/pecho/
+  brazo/muslo con tendencia; `S.measures[]`). **Volumen semanal por grupo muscular** (series/grupo de
+  la rutina activa, con banda 10-20 y color ámbar/verde/azul).
 - v1.3.2: **fix** — el constructor de rutinas no permitía añadir ejercicios a un día porque el selector
   (`pickExercise`) reutilizaba el mismo overlay y destruía el editor. Solución: **segundo overlay
   apilado** (`#overlay2`/`#sheet2` + `openSheet2`/`closeSheet2`). Detectado por la suite de QA.
