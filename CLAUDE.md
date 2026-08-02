@@ -10,7 +10,14 @@ celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-M
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
-- **Versión:** 1.5.1 — QA final integral en vivo (22/22), sin errores de consola ni recursos fallidos.
+- **Versión:** 1.6.0 — **identidad visual del logo aplicada** (mancuerna roja sobre grafito).
+- v1.6.0 (identidad): logo oficial = mancuerna de 3 discos por lado, rojo `#9f1313` sobre `#1e1f1f`.
+  Maestro en `logo.png` (2000×2000, antes "LOGOS APPS.png"). Íconos PNG **regenerados vectorialmente**
+  a cada tamaño (512/192/180/64) con el script de dibujo, no por reescalado. La marca dentro de la app
+  (portada y header) se rehízo como SVG fiel al logo, con token CSS `--brand:#9f1313`; ocupa ~62 % de
+  la placa, igual proporción que el ícono. Añadidos meta `og:`/`twitter:` para el enlace compartido.
+  Caché SW → `stickfit-v4`. El resto de la paleta sigue siendo zinc dark-first con CTA blanco.
+- v1.5.1 — QA final integral en vivo (22/22), sin errores de consola ni recursos fallidos.
 - v1.5.1 (pulido de cierre): eliminado código muerto (`lastLog`); Medidas muestra "primer registro"
   en el primer dato; gramática del aviso corregida ("1 ejercicio registrado"). Caché SW → `stickfit-v3`.
 - v1.5.0 (Tier 2): **registro set por set** en "Registrar pesos" — una fila por serie (según `item.sets`),
@@ -44,10 +51,14 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Arquitectura
 - **Un solo archivo** `index.html` autónomo (HTML + CSS + JS vanilla). Sin build, sin dependencias.
+- `tools/gen-icons.ps1`: regenera los cuatro PNG de ícono dibujando el logo vectorialmente
+  (PowerShell + System.Drawing). Ejecutar solo si cambia el logo; no forma parte de la app.
 - Persistencia en **`localStorage`** bajo la clave `stickfit-v1`.
 - Se abre directo en el navegador del celular (doble click al archivo, o servir por HTTP).
 - Lenguaje visual: **sistema STICK** replicado en CSS puro (dark-first zinc, sin emojis, CTA blanco,
   mono para valores, tarjetas blur, dock inferior). Tipografía: stack Century Gothic (variante AROS).
+- **Identidad:** logo mancuerna rojo `--brand:#9f1313`. El rojo se reserva a la marca (portada, header,
+  íconos); no se usa como color de datos ni de acciones — eso sigue en zinc/emerald/amber/sky.
 
 ## Estructura funcional
 - **Portada** → botón "Entrenar hoy" (flag `onboarded`).

@@ -1,3 +1,5 @@
+<img src="icon-192.png" width="88" alt="STICK FIT">
+
 # STICK FIT
 
 App personal de entrenamiento de **fuerza** (dark-first, mobile-first). Un solo archivo estático,
