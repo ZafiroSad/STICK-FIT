@@ -306,6 +306,18 @@ nav.dock{
 .mp-foods{display:flex;flex-direction:column;gap:3px}
 .mp-foods span{font-size:13px;color:var(--zinc-300);padding-left:14px;position:relative}
 .mp-foods span::before{content:"";position:absolute;left:0;top:8px;width:4px;height:4px;border-radius:50%;background:var(--zinc-600)}
+
+/* ── Registro set por set ── */
+.logex{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(63,63,70,.25)}
+.logex:last-of-type{border-bottom:none}
+.setrow{display:grid;grid-template-columns:66px 1fr 1fr;gap:8px;align-items:center;margin-bottom:6px}
+.setrow-h{margin-bottom:4px}
+.setrow-h .setlbl{text-align:left;padding-left:2px}
+.setlbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--zinc-500)}
+.setrow input{width:100%;background:rgba(9,9,11,.6);border:1px solid var(--zinc-800);border-radius:10px;
+  padding:9px 12px;font-size:14px;font-weight:600;color:#fff;outline:none;font-family:inherit;
+  font-variant-numeric:tabular-nums;transition:border-color .2s ease,background .2s ease}
+.setrow input:focus{border-color:var(--zinc-600);background:rgba(9,9,11,.85)}
 </style>
 </head>
 <body>
@@ -722,35 +734,53 @@ function lastLog(exId){
   if(!logs.length)return null;const l=logs[logs.length-1];
   return `${l.weight?l.weight+" kg":""}${l.weight&&l.reps?" · ":""}${l.reps?l.reps+" reps":""}`||null;
 }
+function nSetsOf(item){return Math.max(1,Math.min(12,parseInt(item.sets)||3));}
 function openLogSheet(dayId){
   const day=activeRoutine().days[dayId];
   let h=`<div class="sheet-grab"></div><div class="sheet-head"><div><div class="h2">Registrar sesión</div><div class="sub" style="margin-top:2px">${DAYNAME[dayId]} · ${day.focus}</div></div>
     <button class="close-x" data-close>×</button></div>
-    <p class="muted" style="margin:6px 0 16px">Anota el peso y reps reales de hoy. Se guarda en tu historial para ver la progresión.</p>`;
+    <p class="muted" style="margin:6px 0 16px">Anota cada serie (vienen pre-cargadas con tu objetivo). Si todas salieron igual, solo pulsa Guardar. La mejor serie cuenta para tu progresión.</p>`;
   day.exercises.forEach((item,i)=>{
     const e=getEx(item.exId);if(!e)return;
     const le=lastEntry(item.exId);
     const sug=le?nextTargetObj(e,le):null;
-    h+=`<div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+    const nS=nSetsOf(item);
+    h+=`<div class="logex">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
         <div class="h3" style="font-size:14px">${e.name}</div>
-        <div class="muted mono">${sug?`sugerido ${sug.weight}×${sug.reps}`:`objetivo ${item.sets}×${item.reps}`}</div>
+        <div class="muted mono">objetivo ${sug?`${sug.weight}×${sug.reps}`:`${item.sets}×${item.reps}`}</div>
       </div>
-      <div class="row2">
-        <div class="field" style="margin:0"><label>Peso (kg)</label><input type="number" inputmode="decimal" data-w="${item.exId}" value="${sug?sug.weight:''}" placeholder="${le?le.weight:'kg'}"></div>
-        <div class="field" style="margin:0"><label>Reps</label><input type="number" inputmode="numeric" data-r="${item.exId}" value="${sug?sug.reps:''}" placeholder="reps"></div>
-      </div></div>`;
+      <div class="setrow setrow-h"><span class="setlbl"></span><span class="setlbl">Peso (kg)</span><span class="setlbl">Reps</span></div>`;
+    for(let si=0;si<nS;si++){
+      h+=`<div class="setrow">
+        <span class="setlbl">Serie ${si+1}</span>
+        <input class="set-w" type="number" inputmode="decimal" data-ei="${i}" data-set="${si}" value="${sug?sug.weight:''}" placeholder="kg">
+        <input class="set-r" type="number" inputmode="numeric" data-ei="${i}" data-set="${si}" value="${sug?sug.reps:''}" placeholder="reps">
+      </div>`;
+    }
+    h+=`</div>`;
   });
   h+=`<button class="btn-primary" style="width:100%;margin-top:8px" id="saveLog">Guardar sesión</button>`;
   openSheet(h);
   $("#saveLog").onclick=()=>{
     let n=0;const date=todayKey();
-    day.exercises.forEach(item=>{
-      const w=$(`[data-w="${item.exId}"]`);const r=$(`[data-r="${item.exId}"]`);
-      const wv=w&&w.value?parseFloat(w.value):null;const rv=r&&r.value?parseInt(r.value):null;
-      if(wv||rv){S.history.push({id:uid(),date,exId:item.exId,weight:wv,reps:rv});n++;}
+    const e1=x=>(x.weight||0)*(1+(x.reps||0)/30);
+    day.exercises.forEach((item,i)=>{
+      const nS=nSetsOf(item);const rows=[];
+      for(let si=0;si<nS;si++){
+        const w=$(`.set-w[data-ei="${i}"][data-set="${si}"]`);
+        const r=$(`.set-r[data-ei="${i}"][data-set="${si}"]`);
+        const wv=w&&w.value?parseFloat(w.value):null;
+        const rv=r&&r.value?parseInt(r.value):null;
+        if(wv||rv)rows.push({weight:wv,reps:rv});
+      }
+      if(rows.length){
+        const best=rows.reduce((a,b)=>e1(b)>e1(a)?b:a);
+        S.history.push({id:uid(),date,exId:item.exId,weight:best.weight,reps:best.reps,sets:rows});
+        n++;
+      }
     });
-    save();closeSheet();renderHoy();toast(n?`${n} ejercicios registrados`:"Sin cambios");
+    save();closeSheet();renderHoy();toast(n?`${n} ejercicio${n>1?'s':''} registrado${n>1?'s':''}`:"Sin cambios");
   };
 }
 
@@ -932,7 +962,7 @@ function openExercise(exId){
   const logs=S.history.filter(l=>l.exId===exId);
   if(logs.length){
     h+=`<div class="tech"><h4>Tu progresión</h4></div><div style="display:flex;flex-direction:column;gap:4px">`;
-    logs.slice(-6).forEach(l=>{h+=`<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-top:1px solid rgba(63,63,70,.25)"><span class="muted mono">${l.date}</span><span class="mono" style="color:var(--zinc-300)">${l.weight?l.weight+" kg":""} ${l.reps?"· "+l.reps+" reps":""}</span></div>`;});
+    logs.slice(-6).forEach(l=>{h+=`<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-top:1px solid rgba(63,63,70,.25)"><span class="muted mono">${l.date}${l.sets&&l.sets.length>1?` · ${l.sets.length} series`:""}</span><span class="mono" style="color:var(--zinc-300)">${l.weight?l.weight+" kg":""} ${l.reps?"· "+l.reps+" reps":""}</span></div>`;});
     h+=`</div>`;
   }
   h+=`<div class="tech"><h4>Ejecución</h4><ol>${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>`;

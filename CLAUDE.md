@@ -10,7 +10,11 @@ celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-M
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual
-- **Versión:** 1.4.0 — QA en vivo (9/9 nuevas + regresiones), sin errores de consola.
+- **Versión:** 1.5.0 — QA en vivo (7/7 set por set), sin errores de consola.
+- v1.5.0 (Tier 2): **registro set por set** en "Registrar pesos" — una fila por serie (según `item.sets`),
+  pre-cargadas con el objetivo sugerido. Entrada de historial ahora lleva `sets:[{weight,reps}]` y
+  `weight`/`reps` = **mejor serie** (mayor 1RM Epley), que alimenta tendencia/progresión. Backward
+  compatible con entradas viejas (sin `sets`).
 - v1.4.0 (Tier 2 + pulido): **Hojas del sistema** en vez de `prompt()`/`confirm()` nativos
   (`promptSheet`/`confirmSheet` sobre `#overlay2`). **Medidas corporales** en Progreso (cintura/pecho/
   brazo/muslo con tendencia; `S.measures[]`). **Volumen semanal por grupo muscular** (series/grupo de
@@ -63,7 +67,7 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 - `rutina` = plan semanal completo (7 días). Varias guardadas, una activa (`activeRoutineId`).
 - Rutina semilla: **Protocolo Base**, split Torso/Pierna ×2 (Lun Torso A · Mar Pierna A · Mié Torso B
   · Vie Pierna B; Jue/Sáb/Dom descanso). Cambiar la semilla exige subir `SEED_VERSION` en el código.
-- `history[]`: registros {date, exId, weight, reps} para progresión.
+- `history[]`: registros {date, exId, weight, reps, sets:[{weight,reps}]} (weight/reps = mejor serie).
 
 ## Decisiones tomadas (no re-litigar sin discusión)
 1. Un solo HTML + localStorage (no React/Vite) — elegido por portabilidad.
