@@ -275,21 +275,6 @@ nav.dock{
 .empty .ei{width:52px;height:52px;border-radius:16px;margin:0 auto 14px;display:grid;place-items:center;
   background:rgba(63,63,70,.2);border:1px solid rgba(63,63,70,.4)}
 
-/* ── Timer flotante ── */
-.timer-fab{position:fixed;right:16px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:55;
-  width:52px;height:52px;border-radius:16px;border:1px solid rgba(63,63,70,.6);cursor:pointer;
-  background:linear-gradient(140deg,#26262b,#141418);color:#fff;display:none;place-items:center;
-  box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .2s var(--ease)}
-.timer-fab:active{transform:scale(.92)}
-.ring{position:relative;width:200px;height:200px;margin:8px auto 20px}
-.ring svg{transform:rotate(-90deg)}
-.ring .rn{position:absolute;inset:0;display:grid;place-items:center;font-size:46px;font-weight:800;
-  font-variant-numeric:tabular-nums;color:#fff}
-.presets{display:flex;gap:8px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
-.preset{border:1px solid var(--zinc-800);background:rgba(24,24,27,.7);color:var(--zinc-300);
-  padding:9px 14px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;transition:.2s}
-.preset.on{background:#fff;color:#000;border-color:#fff}
-
 /* ── Portada ── */
 #cover{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;
   justify-content:center;text-align:center;padding:32px;
@@ -369,11 +354,6 @@ nav.dock{
     <section id="v-nutricion" class="view"></section>
   </main>
 </div>
-
-<!-- Timer FAB -->
-<button class="timer-fab" id="timerFab">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>
-</button>
 
 <!-- Dock -->
 <nav class="dock" id="dock"></nav>
@@ -723,9 +703,8 @@ function bindHoy(){
   $("#v-hoy").querySelectorAll("[data-check]").forEach(c=>c.onclick=e=>{
     e.stopPropagation();const i=+c.dataset.check;const k=checkKey(selectedDay,i);
     const nowDone=!S.checks[k];
-    const item=activeRoutine().days[selectedDay].exercises[i];
     S.checks[k]=nowDone;save();renderHoy();
-    if(nowDone&&item){try{if(navigator.vibrate)navigator.vibrate(15);}catch(_){}openTimer(restForItem(item),true);}
+    if(nowDone){try{if(navigator.vibrate)navigator.vibrate(15);}catch(_){}}
   });
   $("#v-hoy").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openExercise(b.dataset.open));
   const rd=$("#resetDay");if(rd)rd.onclick=()=>{
@@ -1327,59 +1306,12 @@ function toast(msg){$("#toastMsg").textContent=msg;$("#toast").classList.add("sh
   clearTimeout(toastT);toastT=setTimeout(()=>$("#toast").classList.remove("show"),1900);}
 
 /* ---------- Portada ---------- */
-$("#enterBtn").onclick=()=>{S.onboarded=true;save();$("#cover").style.display="none";$("#app").style.display="block";$("#timerFab").style.display="grid";go("hoy");};
-$("#coverBtn").onclick=()=>{$("#cover").style.display="flex";$("#app").style.display="none";$("#timerFab").style.display="none";};
-
-/* ============================================================
-   TIMER
-   ============================================================ */
-function restForItem(item){
-  const r=""+((item&&item.reps)||"");
-  if(/s\s*$/.test(r))return 60;              // ejercicios por tiempo (plancha, etc.)
-  const m=r.match(/(\d+)\s*-\s*(\d+)/);
-  const upper=m?parseInt(m[2]):(parseInt(r)||10);
-  return upper<=8?180:upper<=12?90:60;       // compuesto pesado / accesorio / alto rep
-}
-const CIRC=2*Math.PI*90;let tTotal=90,tRemain=90,tTick=null,tRunning=false;
-function openTimer(sec,autostart){
-  if(sec){tTotal=sec;tRemain=sec;stopTimer();}
-  let h=`<div class="sheet-grab"></div><div class="sheet-head"><div class="h2">Descanso</div><button class="close-x" data-close>×</button></div>
-    <div class="ring"><svg width="200" height="200"><circle cx="100" cy="100" r="90" stroke="rgba(255,255,255,.08)" stroke-width="12" fill="none"/>
-      <circle id="ringFg" cx="100" cy="100" r="90" stroke="#fff" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="${CIRC}" stroke-dashoffset="0"/></svg>
-      <div class="rn" id="tNum">1:30</div></div>
-    <div class="presets" id="presets">
-      ${[["0:30",30],["1:00",60],["1:30",90],["2:00",120],["3:00",180]].map(([l,s])=>`<button class="preset${s===tTotal?" on":""}" data-s="${s}">${l}</button>`).join("")}</div>
-    <div style="display:flex;gap:10px"><button class="btn-primary" style="flex:1" id="tStart">Iniciar</button>
-    <button class="btn-secondary" id="tReset" style="flex:none;width:56px">Reset</button></div>`;
-  openSheet(h);
-  drawTimer();
-  $("#presets").querySelectorAll(".preset").forEach(p=>p.onclick=()=>{
-    $("#presets").querySelectorAll(".preset").forEach(x=>x.classList.remove("on"));p.classList.add("on");
-    tTotal=+p.dataset.s;tRemain=tTotal;stopTimer();drawTimer();});
-  $("#tStart").onclick=runTimer;
-  $("#tReset").onclick=()=>{tRemain=tTotal;stopTimer();drawTimer();};
-  if(autostart)runTimer();
-}
-function fmt(s){const t=Math.max(0,Math.ceil(s));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
-function drawTimer(){const n=$("#tNum");if(!n)return;n.textContent=fmt(tRemain);
-  $("#ringFg").style.strokeDashoffset=CIRC*(1-tRemain/tTotal);}
-function stopTimer(){tRunning=false;clearInterval(tTick);const b=$("#tStart");if(b)b.textContent="Iniciar";}
-function runTimer(){
-  if(tRunning){stopTimer();return;}
-  tRunning=true;const b=$("#tStart");if(b)b.textContent="Pausar";
-  let last=performance.now();
-  tTick=setInterval(()=>{const now=performance.now();tRemain-=(now-last)/1000;last=now;
-    if(tRemain<=0){tRemain=0;drawTimer();stopTimer();try{beep();}catch(e){}return;}drawTimer();},100);
-}
-function beep(){const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator(),g=c.createGain();
-  o.connect(g);g.connect(c.destination);o.frequency.value=880;o.type="sine";
-  g.gain.setValueAtTime(.001,c.currentTime);g.gain.exponentialRampToValueAtTime(.4,c.currentTime+.02);
-  g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.5);o.start();o.stop(c.currentTime+.5);}
-$("#timerFab").onclick=openTimer;
+$("#enterBtn").onclick=()=>{S.onboarded=true;save();$("#cover").style.display="none";$("#app").style.display="block";go("hoy");};
+$("#coverBtn").onclick=()=>{$("#cover").style.display="flex";$("#app").style.display="none";};
 
 /* ---------- Arranque ---------- */
 renderDock();
-if(S.onboarded){$("#cover").style.display="none";$("#app").style.display="block";$("#timerFab").style.display="grid";go("hoy");}
+if(S.onboarded){$("#cover").style.display="none";$("#app").style.display="block";go("hoy");}
 else{go("hoy");}
 
 /* ---------- PWA: service worker (offline + instalable) ---------- */

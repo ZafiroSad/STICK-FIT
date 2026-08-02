@@ -10,7 +10,9 @@ celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-M
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual
-- **Versión:** 1.3.0 — verificada en vivo (Chrome headless vía puppeteer-core), sin errores de consola.
+- **Versión:** 1.3.1 — verificada en vivo (Chrome headless vía puppeteer-core), sin errores de consola.
+- v1.3.1: **Temporizador eliminado por completo** a pedido del Señor Stick (descanso automático al
+  marcar, FAB, modal, CSS y funciones). Se conserva la vibración breve al marcar. No reintroducir.
 - **Deploy:** GitHub Pages, repo público `ZafiroSad/STICK-FIT` → https://zafirosad.github.io/STICK-FIT/
   (2026-08-01). Actualizar = commit + push a `main`; Pages redepliega solo. Repo git independiente
   (no confundir con el repo del home). Datos personales NO viven en el repo (solo localStorage).
@@ -25,7 +27,7 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
   estimado por Epley y próximo objetivo por sobrecarga progresiva). Nutrición ahora genera **3 días
   de comidas** de ejemplo escalados a las kcal objetivo.
 - v1.1.0: Protocolo Base con Jueves de descanso; diagramas musculares rediseñados. Migración `seedVersion`.
-- Las 5 vistas, la ficha muscular, el registro de pesos, el progreso, la nutrición y el timer funcionan.
+- Las 5 vistas, la ficha muscular, el registro de pesos, el progreso y la nutrición funcionan.
 
 ## Arquitectura
 - **Un solo archivo** `index.html` autónomo (HTML + CSS + JS vanilla). Sin build, sin dependencias.
@@ -40,8 +42,8 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 - **Progreso:** peso corporal (registro por día, meta con ritmo, barra inicio→meta, sparkline,
   "esperado hoy" vs real) + fuerza por ejercicio (desde `history`: sparkline, 1RM Epley, próximo
   objetivo). Datos: `weightLog[]` {date,kg} y `weightGoal` {target,rate,startKg,startDate}.
-- **Hoy:** selector de semana, checklist del día activo, barra de progreso, botón "Registrar pesos",
-  timer flotante. Los checks se guardan por fecha (`checks[fecha|dia|idx]`).
+- **Hoy:** selector de semana, checklist del día activo, barra de progreso, botón "Registrar pesos".
+  Los checks se guardan por fecha (`checks[fecha|dia|idx]`).
 - **Rutinas:** lista de planes; crear / renombrar / duplicar / activar / eliminar. Editor por día
   (enfoque, descanso, añadir/quitar ejercicios del catálogo, series/reps).
 - **Ejercicios:** catálogo de 31 ejercicios de fuerza agrupados por músculo. Ficha al click con

@@ -6,7 +6,7 @@ sin build ni dependencias; los datos se guardan en el navegador del dispositivo.
 **Abrir:** https://zafirosad.github.io/STICK-FIT/
 
 ## Funciones
-- **Hoy** — checklist del entrenamiento del día, progreso y temporizador de descanso.
+- **Hoy** — checklist del entrenamiento del día con progreso.
 - **Progreso** — meta de peso corporal con tendencia y estimación de avance; fuerza por ejercicio
   (1RM estimado y próximo objetivo por sobrecarga progresiva). Respaldo exportar / importar.
 - **Rutinas** — crea, edita y guarda varios planes semanales; rutina base incluida.
