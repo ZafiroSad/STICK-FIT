@@ -10,7 +10,20 @@ celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-M
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
-- **Versión:** 1.6.1 — dock alineado al `STICK_UI_SYSTEM.md` §4.5 y scrim de modales al §4.7.
+- **Versión:** 1.7.0 — **historial de peso y medidas** con corrección y borrado.
+- v1.7.0 (historial): botón "Historial" en los bloques de Peso corporal y Medidas corporales (solo
+  aparece si hay registros) que abre una hoja con la lista completa, más reciente arriba. Peso: fecha,
+  valor y diferencia contra el registro anterior, con resumen (nº de registros, días transcurridos y
+  cambio total). Medidas: chips por zona con el valor y su diferencia contra la medida anterior **de
+  esa misma zona** (no contra el registro anterior, que puede no incluirla). Cada fila permite
+  **corregir** (hoja en `overlay2`) o **eliminar** (`confirmSheet`). Helpers nuevos `fechaCorta`/
+  `fechaLarga` (parten el string ISO; `new Date()` interpreta medianoche UTC y en Colombia mostraría
+  el día anterior). Clase `.card-head` para que en pantallas angostas los botones bajen a su línea en
+  vez de partir el título. Caché SW → `stickfit-v5`.
+- **Decisión (v1.7.0):** al corregir o borrar un registro de peso, `syncGoalStart()` recalcula
+  `weightGoal.startKg`/`startDate` desde el registro más antiguo que quede. Sin eso, la proyección de
+  "esperado hoy" seguiría anclada a un dato borrado. No se toca en el registro normal del día.
+- v1.6.1 — dock alineado al `STICK_UI_SYSTEM.md` §4.5 y scrim de modales al §4.7.
 - v1.6.1 (auditoría UI): el dock mostraba las 5 etiquetas a la vez (9 px mayúsculas, "Nutrición" se
   cortaba). Ahora sigue el **TabBar canónico**: solo la pestaña activa lleva label en píldora
   (`rgba(255,255,255,.10)` + borde `/10`), las demás quedan solo con ícono; geometría exacta del
@@ -71,8 +84,9 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 ## Estructura funcional
 - **Portada** → botón "Entrenar hoy" (flag `onboarded`).
 - **Dock (5 vistas):** Hoy · Progreso · Rutinas · Ejercicios · Nutrición.
-- **Progreso:** peso corporal (meta con ritmo, barra inicio→meta, sparkline, "esperado hoy" vs real)
-  + medidas corporales (cintura/pecho/brazo/muslo con tendencia) + fuerza por ejercicio (sparkline,
+- **Progreso:** peso corporal (meta con ritmo, barra inicio→meta, sparkline, "esperado hoy" vs real,
+  **historial** con corrección y borrado)
+  + medidas corporales (cintura/pecho/brazo/muslo con tendencia e **historial**) + fuerza por ejercicio (sparkline,
   1RM Epley, próximo objetivo) + volumen semanal por grupo muscular (series/grupo de la rutina activa,
   banda 10-20) + respaldo Exportar/Importar. Datos: `weightLog[]`, `weightGoal`, `measures[]`.
 - **Hoy:** selector de semana, checklist del día activo, barra de progreso, botón "Registrar pesos"

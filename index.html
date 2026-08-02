@@ -323,6 +323,26 @@ nav.dock{
 .mp-foods span{font-size:13px;color:var(--zinc-300);padding-left:14px;position:relative}
 .mp-foods span::before{content:"";position:absolute;left:0;top:8px;width:4px;height:4px;border-radius:50%;background:var(--zinc-600)}
 
+/* Encabezado de card con acciones: en pantallas angostas los botones bajan a su
+   propia línea en vez de partir el título en dos. */
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  flex-wrap:wrap;margin-bottom:14px}
+.card-head .h3{white-space:nowrap}
+.card-head .acts{display:flex;gap:6px;margin-left:auto}
+
+/* ── Historial (peso y medidas) ── */
+.hrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid rgba(63,63,70,.25)}
+.hrow:first-child{border-top:none;padding-top:2px}
+.hrow .hd{font-size:12px;font-weight:700;color:var(--zinc-400);min-width:50px;letter-spacing:.01em}
+.hrow .hv{font-size:16px;font-weight:800;color:#fff;min-width:72px}
+.hrow .hg{flex:1;font-size:12px;font-weight:700;color:var(--zinc-450)}
+.hrow .ha{display:flex;gap:6px;flex-shrink:0}
+.hrow .ha .icon-btn:hover{color:#fff}
+.mchip{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;
+  background:rgba(39,39,42,.5);border:1px solid rgba(63,63,70,.4);font-size:11px;color:var(--zinc-400)}
+.mchip b{color:#fff;font-size:12px;font-weight:800}
+.mchip i{font-style:normal;font-size:10px;font-weight:700;color:var(--zinc-550)}
+
 /* ── Registro set por set ── */
 .logex{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(63,63,70,.25)}
 .logex:last-of-type{border-bottom:none}
@@ -602,6 +622,8 @@ const IC={
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
   plus:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   chevron:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  pencil:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>',
 };
 const MG_ICON={
   Pecho:'M4 8c3-2 5-2 8-2s5 0 8 2v3c-2 1-5 1.5-8 1.5S6 12 4 11z',
@@ -1111,6 +1133,11 @@ function sparkline(vals,color){
   </svg>`;
 }
 function weeksBetween(d1,d2){return Math.max(0,(new Date(d2)-new Date(d1))/(6048e5));}
+/* "2026-08-02" → "02 ago". Se parte el texto en vez de usar new Date(): esa función
+   interpreta medianoche UTC y en Colombia (UTC-5) mostraría el día anterior. */
+const MESES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+function fechaCorta(iso){const p=String(iso).split("-");return p[2]+" "+(MESES[+p[1]-1]||"");}
+function fechaLarga(iso){const p=String(iso).split("-");return p[2]+" de "+(MESES[+p[1]-1]||"")+" de "+p[0];}
 const RATE_LABEL={"0.5":"+0.5 kg/sem (agresivo)","0.25":"+0.25 kg/sem (magro)","0":"Mantener peso","-0.25":"-0.25 kg/sem","-0.5":"-0.5 kg/sem (definición)"};
 function goalRateFromNutrition(){
   if(!S.profile)return "0.25";
@@ -1134,9 +1161,10 @@ function weightBlock(){
   const cur=logs.length?logs[logs.length-1].kg:null;
   const g=S.weightGoal;
   let h=`<div class="card" style="padding:18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div class="card-head">
       <div class="h3">Peso corporal</div>
-      <div style="display:flex;gap:6px">
+      <div class="acts">
+        ${logs.length?`<button class="btn-secondary" id="histWeight" style="padding:8px 13px">Historial</button>`:``}
         <button class="btn-secondary" id="logWeight" style="padding:8px 13px">Registrar</button>
         <button class="icon-btn" id="editGoal" title="Meta de peso"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></button>
       </div>
@@ -1228,6 +1256,8 @@ function bindProgreso(){
   const lw=$("#logWeight");if(lw)lw.onclick=openWeightSheet;
   const eg=$("#editGoal");if(eg)eg.onclick=openGoalSheet;
   const lm=$("#logMeasure");if(lm)lm.onclick=openMeasureSheet;
+  const hw=$("#histWeight");if(hw)hw.onclick=openWeightHistory;
+  const hm=$("#histMeasure");if(hm)hm.onclick=openMeasureHistory;
   const ed=$("#expData");if(ed)ed.onclick=exportData;
   const im=$("#impData"),imf=$("#impFile");
   if(im&&imf){im.onclick=()=>imf.click();imf.onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value="";};}
@@ -1271,9 +1301,12 @@ const MEASURES=[["cintura","Cintura"],["pecho","Pecho"],["brazo","Brazo"],["musl
 function measuresBlock(){
   const logs=(S.measures||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
   let h=`<div class="card section-gap" style="padding:18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div class="card-head">
       <div class="h3">Medidas corporales</div>
-      <button class="btn-secondary" id="logMeasure" style="padding:8px 13px">Registrar</button>
+      <div class="acts">
+        ${logs.length?`<button class="btn-secondary" id="histMeasure" style="padding:8px 13px">Historial</button>`:``}
+        <button class="btn-secondary" id="logMeasure" style="padding:8px 13px">Registrar</button>
+      </div>
     </div>`;
   const hasAny=logs.some(l=>MEASURES.some(([k])=>l[k]!=null));
   if(!hasAny){
@@ -1318,6 +1351,133 @@ function openMeasureSheet(){
     S.measures=(S.measures||[]).filter(l=>l.date!==date);S.measures.push(entry);
     save();closeSheet2();renderProgreso();toast("Medidas registradas");
   };
+}
+
+/* ---------- Historial de peso y medidas ----------
+   Hojas de consulta con corrección: listan cada registro (más reciente arriba),
+   la diferencia contra el registro anterior, y permiten editar o borrar un día. */
+
+/* El punto de partida de la meta se toma del registro más antiguo. Si se corrige o
+   borra ese primer registro, la proyección quedaría anclada a un dato que ya no existe;
+   por eso se recalcula tras cada edición. */
+function syncGoalStart(){
+  const g=S.weightGoal;if(!g)return;
+  const logs=(S.weightLog||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+  if(!logs.length){g.startKg=null;g.startDate=null;return;}
+  g.startKg=logs[0].kg;g.startDate=logs[0].date;
+}
+
+function openWeightHistory(){
+  const logs=(S.weightLog||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+  if(!logs.length)return;
+  const first=logs[0],last=logs[logs.length-1];
+  const total=+(last.kg-first.kg).toFixed(1);
+  const dias=Math.round((new Date(last.date)-new Date(first.date))/864e5);
+  let rows="";
+  for(let i=logs.length-1;i>=0;i--){
+    const l=logs[i],prev=i>0?logs[i-1]:null;
+    const d=prev?+(l.kg-prev.kg).toFixed(1):null;
+    rows+=`<div class="hrow">
+      <div class="hd">${fechaCorta(l.date)}</div>
+      <div class="hv mono">${l.kg.toFixed(1)}<small style="font-size:11px;color:var(--zinc-500);font-weight:700"> kg</small></div>
+      <div class="hg mono">${d===null?`<span class="dim">primero</span>`:`${d>0?"+":""}${d}`}</div>
+      <div class="ha">
+        <button class="icon-btn" style="width:30px;height:30px" data-hedit="${l.date}" title="Corregir">${IC.pencil}</button>
+        <button class="icon-btn" style="width:30px;height:30px" data-hdel="${l.date}" title="Eliminar">${IC.trash}</button>
+      </div></div>`;
+  }
+  openSheet(`<div class="sheet-grab"></div>
+    <div class="sheet-head"><div class="h2">Historial de peso</div><button class="close-x" data-close>×</button></div>
+    <p class="muted" style="margin:2px 0 14px">${logs.length} registro${logs.length===1?"":"s"}${dias>0?` · ${dias} día${dias===1?"":"s"} · ${total>0?"+":""}${total} kg en total`:""}</p>
+    <div>${rows}</div>`);
+  $("#sheet").querySelectorAll("[data-hedit]").forEach(b=>b.onclick=()=>editWeightEntry(b.dataset.hedit));
+  $("#sheet").querySelectorAll("[data-hdel]").forEach(b=>b.onclick=()=>deleteWeightEntry(b.dataset.hdel));
+}
+
+function editWeightEntry(date){
+  const e=(S.weightLog||[]).find(l=>l.date===date);if(!e)return;
+  openSheet2(`<div class="sheet-grab"></div>
+    <div class="sheet-head"><div class="h2">Corregir peso</div><button class="close-x" data-close>×</button></div>
+    <p class="muted" style="margin:2px 0 14px">${fechaLarga(date)}</p>
+    <div class="field"><label>Peso (kg)</label><input type="number" inputmode="decimal" id="he-v" value="${e.kg}"></div>
+    <button class="btn-primary" style="width:100%" id="he-save">Guardar</button>`);
+  $("#he-save").onclick=()=>{
+    const v=parseFloat($("#he-v").value);if(!v)return toast("Ingresa un peso");
+    e.kg=v;syncGoalStart();
+    const ult=(S.weightLog||[]).slice().sort((a,b)=>a.date<b.date?-1:1).slice(-1)[0];
+    if(S.profile&&ult&&ult.date===date)S.profile.weight=v;
+    save();closeSheet2();openWeightHistory();renderProgreso();toast("Peso corregido");
+  };
+}
+
+function deleteWeightEntry(date){
+  confirmSheet({title:"Eliminar registro",message:`¿Eliminar el peso del ${fechaLarga(date)}?`,cta:"Eliminar",danger:true,
+    onConfirm:()=>{
+      S.weightLog=(S.weightLog||[]).filter(l=>l.date!==date);
+      syncGoalStart();save();renderProgreso();
+      if((S.weightLog||[]).length)openWeightHistory();else closeSheet();
+      toast("Registro eliminado");
+    }});
+}
+
+function openMeasureHistory(){
+  const logs=(S.measures||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+  if(!logs.length)return;
+  let rows="";
+  for(let i=logs.length-1;i>=0;i--){
+    const l=logs[i];
+    const chips=MEASURES.filter(([k])=>l[k]!=null).map(([k,lb])=>{
+      let d=null;
+      for(let j=i-1;j>=0;j--){if(logs[j][k]!=null){d=+(l[k]-logs[j][k]).toFixed(1);break;}}
+      return `<span class="mchip">${lb} <b class="mono">${l[k]}</b>${d===null?"":`<i class="mono">${d>0?"+":""}${d}</i>`}</span>`;
+    }).join("");
+    rows+=`<div class="hrow" style="align-items:flex-start">
+      <div class="hd" style="padding-top:3px">${fechaCorta(l.date)}</div>
+      <div style="flex:1;display:flex;flex-wrap:wrap;gap:6px">${chips||'<span class="dim">sin datos</span>'}</div>
+      <div class="ha">
+        <button class="icon-btn" style="width:30px;height:30px" data-medit="${l.date}" title="Corregir">${IC.pencil}</button>
+        <button class="icon-btn" style="width:30px;height:30px" data-mdel="${l.date}" title="Eliminar">${IC.trash}</button>
+      </div></div>`;
+  }
+  openSheet(`<div class="sheet-grab"></div>
+    <div class="sheet-head"><div class="h2">Historial de medidas</div><button class="close-x" data-close>×</button></div>
+    <p class="muted" style="margin:2px 0 14px">${logs.length} registro${logs.length===1?"":"s"} · la diferencia es contra la medida anterior de esa misma zona</p>
+    <div>${rows}</div>`);
+  $("#sheet").querySelectorAll("[data-medit]").forEach(b=>b.onclick=()=>editMeasureEntry(b.dataset.medit));
+  $("#sheet").querySelectorAll("[data-mdel]").forEach(b=>b.onclick=()=>deleteMeasureEntry(b.dataset.mdel));
+}
+
+function editMeasureEntry(date){
+  const e=(S.measures||[]).find(l=>l.date===date);if(!e)return;
+  openSheet2(`<div class="sheet-grab"></div>
+    <div class="sheet-head"><div class="h2">Corregir medidas</div><button class="close-x" data-close>×</button></div>
+    <p class="muted" style="margin:2px 0 14px">${fechaLarga(date)} · deja en blanco para quitar una medida</p>
+    <div class="row2">
+      <div class="field"><label>Cintura</label><input type="number" inputmode="decimal" id="me-cintura" value="${e.cintura!=null?e.cintura:""}"></div>
+      <div class="field"><label>Pecho</label><input type="number" inputmode="decimal" id="me-pecho" value="${e.pecho!=null?e.pecho:""}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Brazo</label><input type="number" inputmode="decimal" id="me-brazo" value="${e.brazo!=null?e.brazo:""}"></div>
+      <div class="field"><label>Muslo</label><input type="number" inputmode="decimal" id="me-muslo" value="${e.muslo!=null?e.muslo:""}"></div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:6px" id="me-save">Guardar</button>`);
+  $("#me-save").onclick=()=>{
+    const entry={date};let any=false;
+    MEASURES.forEach(([k])=>{const v=parseFloat($("#me-"+k).value);if(v){entry[k]=v;any=true;}});
+    if(!any)return toast("Deja al menos una medida o elimina el registro");
+    S.measures=(S.measures||[]).filter(l=>l.date!==date);S.measures.push(entry);
+    save();closeSheet2();openMeasureHistory();renderProgreso();toast("Medidas corregidas");
+  };
+}
+
+function deleteMeasureEntry(date){
+  confirmSheet({title:"Eliminar registro",message:`¿Eliminar las medidas del ${fechaLarga(date)}?`,cta:"Eliminar",danger:true,
+    onConfirm:()=>{
+      S.measures=(S.measures||[]).filter(l=>l.date!==date);
+      save();renderProgreso();
+      if((S.measures||[]).length)openMeasureHistory();else closeSheet();
+      toast("Registro eliminado");
+    }});
 }
 
 /* ---------- Volumen semanal por grupo muscular ---------- */
