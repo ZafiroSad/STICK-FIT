@@ -10,10 +10,15 @@ celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-M
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual
-- **Versión:** 1.2.1 — verificada en vivo (Chrome headless vía puppeteer-core), sin errores de consola.
+- **Versión:** 1.3.0 — verificada en vivo (Chrome headless vía puppeteer-core), sin errores de consola.
 - **Deploy:** GitHub Pages, repo público `ZafiroSad/STICK-FIT` → https://zafirosad.github.io/STICK-FIT/
   (2026-08-01). Actualizar = commit + push a `main`; Pages redepliega solo. Repo git independiente
   (no confundir con el repo del home). Datos personales NO viven en el repo (solo localStorage).
+- v1.3.0 (Tier 1 de mejoras): **PWA real** (`manifest.json` + `service-worker.js` network-first +
+  íconos PNG 192/512/180/48) → instalable con ícono y offline. **Timer integrado**: al marcar un
+  ejercicio auto-inicia el descanso con duración por ejercicio (≤8 reps 180 s · ≤12 90 s · resto 60 s)
+  + vibración. **Progresión conectada**: Hoy muestra "objetivo X kg × Y" según la última sesión y
+  pre-carga ese valor en "Registrar pesos". Fix: `fmt()` del timer (redondeo min/seg).
 - v1.2.1: **Respaldo de datos** (Exportar/Importar JSON) en Progreso, para no perder el avance.
 - v1.2.0: nueva pestaña **Progreso** (meta de peso corporal con tendencia y estimación de si vas en
   línea/adelantado/atrasado según el ritmo del objetivo; fuerza por ejercicio con sparkline, 1RM

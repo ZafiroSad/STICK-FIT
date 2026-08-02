@@ -6,6 +6,10 @@
 <meta name="theme-color" content="#0c0d10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="STICK FIT">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./favicon.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <title>STICK FIT</title>
 <style>
 /* ============================================================
@@ -694,12 +698,13 @@ function renderHoy(){
   day.exercises.forEach((item,i)=>{
     const e=getEx(item.exId);if(!e)return;
     const done=isChecked(selectedDay,i);
-    const last=lastLog(item.exId);
+    const le=lastEntry(item.exId);
+    const sug=le?nextTargetObj(e,le):null;
     h+=`<div class="ex${done?" done":""}" data-idx="${i}">
       <div class="chk" data-check="${i}">${IC.check}</div>
       <div class="ex-body" data-open="${item.exId}">
         <div class="ex-name">${e.name}</div>
-        <div class="ex-meta">${e.group}${last?` · último: <b style="color:var(--zinc-400)">${last}</b>`:""}</div>
+        <div class="ex-meta">${e.group}${sug?` · <span style="color:var(--emerald);font-weight:700">objetivo ${sug.weight} kg × ${sug.reps}</span>`:""}</div>
       </div>
       <div class="ex-target mono">${item.sets}×${item.reps}</div>
     </div>`;
@@ -717,7 +722,10 @@ function bindHoy(){
   $("#v-hoy").querySelectorAll(".daypill").forEach(p=>p.onclick=()=>{selectedDay=p.dataset.day;renderHoy();});
   $("#v-hoy").querySelectorAll("[data-check]").forEach(c=>c.onclick=e=>{
     e.stopPropagation();const i=+c.dataset.check;const k=checkKey(selectedDay,i);
-    S.checks[k]=!S.checks[k];save();renderHoy();
+    const nowDone=!S.checks[k];
+    const item=activeRoutine().days[selectedDay].exercises[i];
+    S.checks[k]=nowDone;save();renderHoy();
+    if(nowDone&&item){try{if(navigator.vibrate)navigator.vibrate(15);}catch(_){}openTimer(restForItem(item),true);}
   });
   $("#v-hoy").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openExercise(b.dataset.open));
   const rd=$("#resetDay");if(rd)rd.onclick=()=>{
@@ -740,15 +748,16 @@ function openLogSheet(dayId){
     <p class="muted" style="margin:6px 0 16px">Anota el peso y reps reales de hoy. Se guarda en tu historial para ver la progresión.</p>`;
   day.exercises.forEach((item,i)=>{
     const e=getEx(item.exId);if(!e)return;
-    const last=lastLog(item.exId);
+    const le=lastEntry(item.exId);
+    const sug=le?nextTargetObj(e,le):null;
     h+=`<div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
         <div class="h3" style="font-size:14px">${e.name}</div>
-        <div class="muted mono">objetivo ${item.sets}×${item.reps}</div>
+        <div class="muted mono">${sug?`sugerido ${sug.weight}×${sug.reps}`:`objetivo ${item.sets}×${item.reps}`}</div>
       </div>
       <div class="row2">
-        <div class="field" style="margin:0"><label>Peso (kg)</label><input type="number" inputmode="decimal" data-w="${item.exId}" placeholder="${last&&last.includes('kg')?last.split(' ')[0]:'—'}"></div>
-        <div class="field" style="margin:0"><label>Reps</label><input type="number" inputmode="numeric" data-r="${item.exId}" placeholder="—"></div>
+        <div class="field" style="margin:0"><label>Peso (kg)</label><input type="number" inputmode="decimal" data-w="${item.exId}" value="${sug?sug.weight:''}" placeholder="${le?le.weight:'kg'}"></div>
+        <div class="field" style="margin:0"><label>Reps</label><input type="number" inputmode="numeric" data-r="${item.exId}" value="${sug?sug.reps:''}" placeholder="reps"></div>
       </div></div>`;
   });
   h+=`<button class="btn-primary" style="width:100%;margin-top:8px" id="saveLog">Guardar sesión</button>`;
@@ -1171,16 +1180,21 @@ function strengthBlock(){
   h+=`<div style="margin-top:6px;padding:12px 14px;border-radius:12px;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2)"><p class="sub" style="font-size:12px"><b style="color:#fff">Ritmo natural esperado:</b> ~2.5 kg cada 2-3 semanas en compuestos (banca, sentadilla, peso muerto) y más lento en aislamientos. Si superas el rango de reps, sube el peso; si no, suma una repetición.</p></div>`;
   return h;
 }
-function nextTarget(e,last){
-  if(typeof e.reps!=="string"||/s\s*$/.test(e.reps))return "+1 rep";
-  const m=e.reps.match(/(\d+)\s*-\s*(\d+)/);
+function nextTargetObj(e,last){
+  if(!last||last.weight==null)return null;
+  const timeBased=typeof e.reps==="string"&&/s\s*$/.test(e.reps);
+  const m=(typeof e.reps==="string")?e.reps.match(/(\d+)\s*-\s*(\d+)/):null;
   const upper=m?parseInt(m[2]):(parseInt(e.reps)||10);
+  const lower=m?parseInt(m[1]):upper;
+  if(timeBased)return {weight:last.weight,reps:last.reps||0};
   if((last.reps||0)>=upper){
     const inc=/Barra|Máquina|Prensa/i.test(e.eq)?2.5:1;
-    return `${+(last.weight+inc).toFixed(1)} kg × ${m?m[1]:upper}`;
+    return {weight:+(last.weight+inc).toFixed(1),reps:lower};
   }
-  return `${last.weight} kg × ${(last.reps||0)+1}`;
+  return {weight:last.weight,reps:(last.reps||0)+1};
 }
+function nextTarget(e,last){const o=nextTargetObj(e,last);return o?`${o.weight} kg × ${o.reps}`:"—";}
+function lastEntry(exId){const l=(S.history||[]).filter(x=>x.exId===exId&&x.weight!=null).sort((a,b)=>a.date<b.date?-1:1);return l.length?l[l.length-1]:null;}
 function bindProgreso(){
   const lw=$("#logWeight");if(lw)lw.onclick=openWeightSheet;
   const eg=$("#editGoal");if(eg)eg.onclick=openGoalSheet;
@@ -1319,8 +1333,16 @@ $("#coverBtn").onclick=()=>{$("#cover").style.display="flex";$("#app").style.dis
 /* ============================================================
    TIMER
    ============================================================ */
+function restForItem(item){
+  const r=""+((item&&item.reps)||"");
+  if(/s\s*$/.test(r))return 60;              // ejercicios por tiempo (plancha, etc.)
+  const m=r.match(/(\d+)\s*-\s*(\d+)/);
+  const upper=m?parseInt(m[2]):(parseInt(r)||10);
+  return upper<=8?180:upper<=12?90:60;       // compuesto pesado / accesorio / alto rep
+}
 const CIRC=2*Math.PI*90;let tTotal=90,tRemain=90,tTick=null,tRunning=false;
-function openTimer(){
+function openTimer(sec,autostart){
+  if(sec){tTotal=sec;tRemain=sec;stopTimer();}
   let h=`<div class="sheet-grab"></div><div class="sheet-head"><div class="h2">Descanso</div><button class="close-x" data-close>×</button></div>
     <div class="ring"><svg width="200" height="200"><circle cx="100" cy="100" r="90" stroke="rgba(255,255,255,.08)" stroke-width="12" fill="none"/>
       <circle id="ringFg" cx="100" cy="100" r="90" stroke="#fff" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="${CIRC}" stroke-dashoffset="0"/></svg>
@@ -1336,8 +1358,9 @@ function openTimer(){
     tTotal=+p.dataset.s;tRemain=tTotal;stopTimer();drawTimer();});
   $("#tStart").onclick=runTimer;
   $("#tReset").onclick=()=>{tRemain=tTotal;stopTimer();drawTimer();};
+  if(autostart)runTimer();
 }
-function fmt(s){return Math.floor(s/60)+":"+String(Math.ceil(s)%60).padStart(2,"0");}
+function fmt(s){const t=Math.max(0,Math.ceil(s));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
 function drawTimer(){const n=$("#tNum");if(!n)return;n.textContent=fmt(tRemain);
   $("#ringFg").style.strokeDashoffset=CIRC*(1-tRemain/tTotal);}
 function stopTimer(){tRunning=false;clearInterval(tTick);const b=$("#tStart");if(b)b.textContent="Iniciar";}
@@ -1358,6 +1381,11 @@ $("#timerFab").onclick=openTimer;
 renderDock();
 if(S.onboarded){$("#cover").style.display="none";$("#app").style.display="block";$("#timerFab").style.display="grid";go("hoy");}
 else{go("hoy");}
+
+/* ---------- PWA: service worker (offline + instalable) ---------- */
+if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));
+}
 </script>
 </body>
 </html>
