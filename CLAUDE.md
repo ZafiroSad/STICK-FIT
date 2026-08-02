@@ -10,7 +10,10 @@ celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-M
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual
-- **Versión:** 1.3.1 — verificada en vivo (Chrome headless vía puppeteer-core), sin errores de consola.
+- **Versión:** 1.3.2 — QA integral (23 checks) en vivo, sin errores de consola.
+- v1.3.2: **fix** — el constructor de rutinas no permitía añadir ejercicios a un día porque el selector
+  (`pickExercise`) reutilizaba el mismo overlay y destruía el editor. Solución: **segundo overlay
+  apilado** (`#overlay2`/`#sheet2` + `openSheet2`/`closeSheet2`). Detectado por la suite de QA.
 - v1.3.1: **Temporizador eliminado por completo** a pedido del Señor Stick (descanso automático al
   marcar, FAB, modal, CSS y funciones). Se conserva la vibración breve al marcar. No reintroducir.
 - **Deploy:** GitHub Pages, repo público `ZafiroSad/STICK-FIT` → https://zafirosad.github.io/STICK-FIT/

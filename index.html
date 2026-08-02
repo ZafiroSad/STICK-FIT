@@ -360,6 +360,7 @@ nav.dock{
 
 <!-- Overlay genérico -->
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+<div class="overlay" id="overlay2" style="z-index:90"><div class="sheet" id="sheet2"></div></div>
 
 <!-- Toast -->
 <div class="toast" id="toast"><span class="tdot"></span><span id="toastMsg"></span></div>
@@ -871,7 +872,7 @@ function editDay(rid,dayId){
 function pickExercise(cb){
   let h=`<div class="sheet-grab"></div><div class="sheet-head"><div class="h2">Añadir ejercicio</div><button class="close-x" data-close>×</button></div>
     <div class="field" style="margin-top:10px"><input type="text" id="exSearch" placeholder="Buscar ejercicio..."></div><div id="pickList"></div>`;
-  openSheet(h);
+  openSheet2(h);
   function draw(q){
     q=(q||"").toLowerCase();
     const list=$("#pickList");let out="";
@@ -882,7 +883,7 @@ function pickExercise(cb){
       out+=items.map(e=>`<div class="cat-item" data-pick="${e.id}"><div class="mg-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--zinc-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${MG_ICON[g]}"/></svg></div><div style="flex:1"><div class="ex-name" style="font-size:13px">${e.name}</div><div class="ex-meta">${e.eq} · ${e.sets}×${e.reps}</div></div>${IC.chevron}</div>`).join("");
     });
     list.innerHTML=out||`<p class="muted" style="text-align:center;padding:20px">Sin resultados.</p>`;
-    list.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{cb(b.dataset.pick);closeSheet();});
+    list.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{cb(b.dataset.pick);closeSheet2();});
   }
   draw("");
   $("#exSearch").oninput=e=>draw(e.target.value);
@@ -1299,6 +1300,11 @@ function openSheet(html){$("#sheet").innerHTML=html;$("#overlay").classList.add(
   $("#sheet").querySelectorAll("[data-close]").forEach(b=>b.onclick=closeSheet);}
 function closeSheet(){$("#overlay").classList.remove("open");}
 $("#overlay").onclick=e=>{if(e.target===$("#overlay"))closeSheet();};
+/* Segundo overlay apilado (para selectores abiertos desde otra hoja, ej. añadir ejercicio) */
+function openSheet2(html){$("#sheet2").innerHTML=html;$("#overlay2").classList.add("open");
+  $("#sheet2").querySelectorAll("[data-close]").forEach(b=>b.onclick=closeSheet2);}
+function closeSheet2(){$("#overlay2").classList.remove("open");}
+$("#overlay2").onclick=e=>{if(e.target===$("#overlay2"))closeSheet2();};
 
 /* ---------- Toast ---------- */
 let toastT;
