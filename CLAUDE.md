@@ -9,8 +9,10 @@ celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-M
 `C:\Users\kevin\Documents\KEVIN\02. WORK\03. PROYECTOS PERSONALES\STICK FIT\` (movida desde Downloads
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
-## Estado actual
-- **Versión:** 1.5.0 — QA en vivo (7/7 set por set), sin errores de consola.
+## Estado actual — ESTABLE (Tier 1 y 2 completos)
+- **Versión:** 1.5.1 — QA final integral en vivo (22/22), sin errores de consola ni recursos fallidos.
+- v1.5.1 (pulido de cierre): eliminado código muerto (`lastLog`); Medidas muestra "primer registro"
+  en el primer dato; gramática del aviso corregida ("1 ejercicio registrado"). Caché SW → `stickfit-v3`.
 - v1.5.0 (Tier 2): **registro set por set** en "Registrar pesos" — una fila por serie (según `item.sets`),
   pre-cargadas con el objetivo sugerido. Entrada de historial ahora lleva `sets:[{weight,reps}]` y
   `weight`/`reps` = **mejor serie** (mayor 1RM Epley), que alimenta tendencia/progresión. Backward
@@ -50,11 +52,13 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 ## Estructura funcional
 - **Portada** → botón "Entrenar hoy" (flag `onboarded`).
 - **Dock (5 vistas):** Hoy · Progreso · Rutinas · Ejercicios · Nutrición.
-- **Progreso:** peso corporal (registro por día, meta con ritmo, barra inicio→meta, sparkline,
-  "esperado hoy" vs real) + fuerza por ejercicio (desde `history`: sparkline, 1RM Epley, próximo
-  objetivo). Datos: `weightLog[]` {date,kg} y `weightGoal` {target,rate,startKg,startDate}.
-- **Hoy:** selector de semana, checklist del día activo, barra de progreso, botón "Registrar pesos".
-  Los checks se guardan por fecha (`checks[fecha|dia|idx]`).
+- **Progreso:** peso corporal (meta con ritmo, barra inicio→meta, sparkline, "esperado hoy" vs real)
+  + medidas corporales (cintura/pecho/brazo/muslo con tendencia) + fuerza por ejercicio (sparkline,
+  1RM Epley, próximo objetivo) + volumen semanal por grupo muscular (series/grupo de la rutina activa,
+  banda 10-20) + respaldo Exportar/Importar. Datos: `weightLog[]`, `weightGoal`, `measures[]`.
+- **Hoy:** selector de semana, checklist del día activo, barra de progreso, botón "Registrar pesos"
+  (registro **set por set**: una fila por serie, pre-cargadas con el objetivo). Los checks se guardan
+  por fecha (`checks[fecha|dia|idx]`).
 - **Rutinas:** lista de planes; crear / renombrar / duplicar / activar / eliminar. Editor por día
   (enfoque, descanso, añadir/quitar ejercicios del catálogo, series/reps).
 - **Ejercicios:** catálogo de 31 ejercicios de fuerza agrupados por músculo. Ficha al click con
@@ -71,7 +75,7 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Decisiones tomadas (no re-litigar sin discusión)
 1. Un solo HTML + localStorage (no React/Vite) — elegido por portabilidad.
-2. Navegación por dock inferior de 4 secciones.
+2. Navegación por dock inferior (5 secciones: Hoy · Progreso · Rutinas · Ejercicios · Nutrición).
 3. Ficha de ejercicio con diagrama SVG + técnica (no fotos incrustadas por peso; URL opcional).
 4. Rutina = plan semanal completo.
 5. Nutrición completa (kcal + macros + agua).
@@ -81,9 +85,14 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 9. Tipografía: Century Gothic (variante AROS).
 10. Progreso: checklist + registro de peso/reps con historial.
 
-## Pendientes / ideas futuras
+## Completado
+- **Tier 1:** PWA real (instalable, offline, ícono propio), progresión conectada al día. (El timer
+  integrado se construyó y luego se retiró a pedido del Señor Stick.)
+- **Tier 2:** medidas corporales, volumen semanal por grupo muscular, registro set por set.
+- **Deploy:** GitHub Pages + repo git independiente `ZafiroSad/STICK-FIT`.
+
+## Pendientes / ideas futuras (Tier 3, opcional)
+- Plan de comidas con kcal reales por alimento y porciones escaladas.
+- Reordenar ejercicios en el constructor.
+- Nutrición: Katch-McArdle (si conoce % grasa) y semana de descarga (deload).
 - Ampliar catálogo de ejercicios si el Señor Stick lo pide.
-- Posible sección de método/filosofía reescrita sin Spider-Man (descartada en v1).
-- Progresión visual (sparkline) en la ficha en vez de lista.
-- Evaluar convertir a PWA instalable si más adelante quiere React/Vercel.
-- Evaluar repositorio Git.

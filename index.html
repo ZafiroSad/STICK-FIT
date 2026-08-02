@@ -729,11 +729,6 @@ function bindHoy(){
 }
 
 /* ---------- Registro de pesos ---------- */
-function lastLog(exId){
-  const logs=S.history.filter(l=>l.exId===exId).sort((a,b)=>b.date<a.date?-1:1);
-  if(!logs.length)return null;const l=logs[logs.length-1];
-  return `${l.weight?l.weight+" kg":""}${l.weight&&l.reps?" · ":""}${l.reps?l.reps+" reps":""}`||null;
-}
 function nSetsOf(item){return Math.max(1,Math.min(12,parseInt(item.sets)||3));}
 function openLogSheet(dayId){
   const day=activeRoutine().days[dayId];
@@ -1273,7 +1268,7 @@ function measuresBlock(){
     const delta=+(last-first).toFixed(1);
     h+=`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid rgba(63,63,70,.25)">
       <div style="flex:1;min-width:0"><div class="h3" style="font-size:14px">${label}</div>
-        <div class="mono" style="font-size:11px;color:${delta<0?'var(--emerald)':delta>0?'var(--sky)':'var(--zinc-500)'}">${delta>0?'+':''}${delta} cm</div></div>
+        ${series.length>=2?`<div class="mono" style="font-size:11px;color:${delta<0?'var(--emerald)':delta>0?'var(--sky)':'var(--zinc-500)'}">${delta>0?'+':''}${delta} cm desde el inicio</div>`:`<div class="dim" style="font-size:11px">primer registro</div>`}</div>
       <div style="width:110px">${series.length>=2?sparkline(series.map(s=>s[k]),"#a1a1aa"):'<span class="muted" style="font-size:11px">1 registro</span>'}</div>
       <div class="mono" style="font-weight:800;font-size:16px;min-width:54px;text-align:right">${last}<small style="color:var(--zinc-500);font-size:11px"> cm</small></div>
     </div>`;
