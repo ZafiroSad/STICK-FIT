@@ -10,6 +10,14 @@ celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-M
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
+- **Versión:** 1.6.1 — dock alineado al `STICK_UI_SYSTEM.md` §4.5 y scrim de modales al §4.7.
+- v1.6.1 (auditoría UI): el dock mostraba las 5 etiquetas a la vez (9 px mayúsculas, "Nutrición" se
+  cortaba). Ahora sigue el **TabBar canónico**: solo la pestaña activa lleva label en píldora
+  (`rgba(255,255,255,.10)` + borde `/10`), las demás quedan solo con ícono; geometría exacta del
+  sistema (alto 62 px, ancho 92 % / máx. 384 px, `bottom` 20 px + safe-area, ícono 19 px con
+  `stroke-width` 1.75 → 2 al activarse, label 11 px). Scrim de `.overlay`: `rgba(4,5,9,.72)`+blur 6
+  → `rgba(0,0,0,.8)`+blur 4 (§4.7). Verificado en vivo: 5 vistas OK, 1 sola etiqueta visible,
+  dock 384×62 centrado, sin scroll horizontal, sin errores de consola.
 - **Versión:** 1.6.0 — **identidad visual del logo aplicada** (mancuerna roja sobre grafito).
 - v1.6.0 (identidad): logo oficial = mancuerna de 3 discos por lado, rojo `#9f1313` sobre `#1e1f1f`.
   Maestro en `logo.png` (2000×2000, antes "LOGOS APPS.png"). Íconos PNG **regenerados vectorialmente**
