@@ -13,6 +13,20 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
+- **Versión:** 1.10.0 — **asistencia mensual** (calendario de cuadritos en Progreso).
+- v1.10.0 (asistencia): primer bloque de **Progreso**. Calendario del mes con un cuadrito por día
+  (semana de lunes a domingo), navegación ‹ › entre meses (el botón "siguiente" se deshabilita en el
+  mes actual), leyenda y dos stats: **racha** y **sesiones del mes / días programados**. Estados del
+  cuadrito: verde sólido = día completo · verde tenue = entrenó a medias · borde rosa = tocaba y no
+  fue · gris = descanso según la rutina · atenuado = futuro · anillo blanco = hoy. Caché SW →
+  `stickfit-v8`.
+- **Decisión (v1.10.0):** la asistencia **no guarda datos nuevos**; se deriva de `checks` (cuya clave
+  ya empieza por la fecha) y de `history[].date`. Un día cuenta como entrenado con marcar un ejercicio
+  o registrar un peso, y como completo cuando los checks del día igualan los ejercicios de la rutina.
+  Guardar un estado aparte habría duplicado la verdad y se desincronizaría al reiniciar un día.
+- **Decisión (v1.10.0):** `currentStreak()` recorre hacia atrás **saltando los días de descanso** de la
+  rutina, así que la racha cuenta sesiones consecutivas, no días de calendario. El día de hoy sin
+  entrenar todavía no rompe la racha (`i>0` para cortar); si no, la racha se vería en 0 cada mañana.
 - **Versión:** 1.9.0 — **registro por ejercicio, serie por serie, en libras**.
 - v1.9.0 (registro): desaparece el botón único "Registrar pesos" del día. Cada fila de **Hoy** lleva su
   propio botón a la derecha ("+ Peso"); al tocarlo se abre la hoja de **ese** ejercicio con una fila por
@@ -121,7 +135,8 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 ## Estructura funcional
 - **Portada** → botón "Entrenar hoy" (flag `onboarded`).
 - **Dock (5 vistas):** Hoy · Progreso · Rutinas · Ejercicios · Nutrición.
-- **Progreso:** peso corporal (meta con ritmo, barra inicio→meta, sparkline, "esperado hoy" vs real,
+- **Progreso:** asistencia del mes (calendario de cuadritos, racha, % de cumplimiento)
+  + peso corporal (meta con ritmo, barra inicio→meta, sparkline, "esperado hoy" vs real,
   **historial** con corrección y borrado)
   + medidas corporales (cintura/pecho/brazo/muslo con tendencia e **historial**) + fuerza por ejercicio (sparkline,
   1RM Epley, próximo objetivo) + volumen semanal por grupo muscular (series/grupo de la rutina activa,

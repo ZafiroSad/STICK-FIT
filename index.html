@@ -220,6 +220,24 @@ nav.dock{
 .ex-log.logged{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.30);color:var(--emerald)}
 .ex-log.logged .elk{color:rgba(52,211,153,.75)}
 
+/* ── Calendario de asistencia ── */
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.calhead{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--zinc-600);text-align:center;padding-bottom:2px}
+.calcell{aspect-ratio:1;border-radius:9px;display:grid;place-items:center;
+  font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;
+  background:rgba(24,24,27,.5);border:1px solid rgba(63,63,70,.3);color:var(--zinc-600)}
+.calcell.blank{background:transparent;border-color:transparent}
+.calcell.rest{background:rgba(24,24,27,.35);border-color:rgba(63,63,70,.2);color:var(--zinc-700)}
+.calcell.miss{background:rgba(24,24,27,.6);border-color:rgba(251,113,133,.22);color:var(--zinc-550)}
+.calcell.part{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35);color:var(--emerald)}
+.calcell.full{background:var(--emerald);border-color:var(--emerald);color:#04120c}
+.calcell.fut{opacity:.45}
+.calcell.today{box-shadow:0 0 0 2px rgba(255,255,255,.55)}
+.callegend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.callegend span{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--zinc-500)}
+.callegend i{width:11px;height:11px;border-radius:4px;display:inline-block;border:1px solid transparent}
+
 /* ── Barra de progreso ── */
 .bar{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
 .bar i{display:block;height:100%;width:0;border-radius:999px;background:#fff;transition:width .4s var(--ease)}
@@ -1235,6 +1253,9 @@ function goalRateFromNutrition(){
 function renderProgreso(){
   let h=`<div class="view-head"><div class="label">Tu evolución</div><div class="h1" style="margin-top:2px">Progreso</div>
     <div class="sub" style="margin-top:4px">Registra tu peso y tus cargas; la app estima si vas en línea con la meta.</div></div>`;
+  h+=`<div class="label-mono" style="margin-bottom:10px">Asistencia</div>`;
+  h+=attendanceBlock();
+  h+=`<div class="section-gap"></div>`;
   h+=weightBlock();
   h+=measuresBlock();
   h+=`<div class="label-mono section-gap" style="margin-bottom:10px">Fuerza por ejercicio</div>`;
@@ -1245,6 +1266,85 @@ function renderProgreso(){
   $("#v-progreso").innerHTML=h;
   bindProgreso();
 }
+/* ---------- Asistencia (se deriva sola de checks + registros de peso) ---------- */
+const DAY_IDS=["dom","lun","mar","mie","jue","vie","sab"];
+const MESES_LARGO=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+let calYM=null; // {y,m} del mes que se está viendo; null = mes actual
+function isoOf(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function dayStats(iso){
+  const p=iso.split("-");
+  const dayId=DAY_IDS[new Date(+p[0],+p[1]-1,+p[2]).getDay()];
+  const day=activeRoutine().days[dayId];
+  const rest=!day||day.rest;
+  const total=rest?0:day.exercises.length;
+  let done=0;
+  const pre=iso+"|";
+  Object.keys(S.checks||{}).forEach(k=>{if(S.checks[k]&&k.indexOf(pre)===0)done++;});
+  const logged=(S.history||[]).some(l=>l.date===iso);
+  return {rest,total,done,logged,trained:done>0||logged,
+    full:total>0&&done>=total};
+}
+function currentStreak(){
+  const d=new Date();let n=0;
+  for(let i=0;i<400;i++){
+    const st=dayStats(isoOf(d));
+    if(!st.rest){
+      if(st.trained)n++;
+      else if(i>0)break;   // hoy pendiente no rompe la racha
+    }
+    d.setDate(d.getDate()-1);
+  }
+  return n;
+}
+function attendanceBlock(){
+  const now=new Date();
+  const y=calYM?calYM.y:now.getFullYear(), m=calYM?calYM.m:now.getMonth();
+  const isCur=y===now.getFullYear()&&m===now.getMonth();
+  const first=new Date(y,m,1), nDays=new Date(y,m+1,0).getDate();
+  const lead=(first.getDay()+6)%7;                  // la semana empieza en lunes
+  const todayIso=todayKey();
+  let hechos=0,programados=0,cells="";
+  for(let i=0;i<lead;i++)cells+=`<div class="calcell blank"></div>`;
+  for(let d=1;d<=nDays;d++){
+    const iso=isoOf(new Date(y,m,d));
+    const st=dayStats(iso);
+    const future=iso>todayIso;
+    if(!st.rest&&!future)programados++;
+    if(st.trained)hechos++;
+    let cls=st.trained?(st.full?"full":"part"):(st.rest?"rest":(future?"":"miss"));
+    if(future)cls+=" fut";
+    if(iso===todayIso)cls+=" today";
+    cells+=`<div class="calcell ${cls}" title="${fechaLarga(iso)}${st.rest?" · descanso":st.trained?` · ${st.done}/${st.total} ejercicios`:" · sin registro"}">${d}</div>`;
+  }
+  const pct=programados?Math.round(hechos/programados*100):0;
+  const racha=currentStreak();
+  let h=`<div class="card" style="padding:18px">
+    <div class="card-head">
+      <div><div class="h3">${MESES_LARGO[m]} ${y}</div>
+        <div class="sub" style="margin-top:2px">${hechos} ${hechos===1?"sesión":"sesiones"}${programados?` · ${pct}% de los días programados`:""}</div></div>
+      <div class="acts">
+        <button class="icon-btn" id="calPrev" title="Mes anterior"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button class="icon-btn" id="calNext" title="Mes siguiente" ${isCur?"disabled style=\"opacity:.35\"":""}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+    <div class="calgrid" style="margin-bottom:6px">${["L","M","M","J","V","S","D"].map(x=>`<div class="calhead">${x}</div>`).join("")}</div>
+    <div class="calgrid">${cells}</div>
+    <div class="callegend">
+      <span><i style="background:var(--emerald)"></i>Día completo</span>
+      <span><i style="background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35)"></i>Entrenaste a medias</span>
+      <span><i style="background:rgba(24,24,27,.6);border-color:rgba(251,113,133,.22)"></i>Tocaba y no fuiste</span>
+      <span><i style="background:rgba(24,24,27,.35);border-color:rgba(63,63,70,.25)"></i>Descanso</span>
+    </div>`;
+  h+=`<div style="display:flex;gap:10px;margin-top:14px">
+    <div class="stat" style="flex:1;padding:12px 14px"><div class="label">Racha</div>
+      <div class="mono" style="font-size:20px;font-weight:800;color:${racha?'var(--emerald)':'var(--zinc-400)'}">${racha}<small style="font-size:11px;color:var(--zinc-500);font-weight:700"> ${racha===1?"sesión":"sesiones"}</small></div></div>
+    <div class="stat" style="flex:1;padding:12px 14px"><div class="label">Este mes</div>
+      <div class="mono" style="font-size:20px;font-weight:800">${hechos}<small style="font-size:11px;color:var(--zinc-500);font-weight:700">${programados?" / "+programados:""}</small></div></div>
+  </div>`;
+  h+=`<p class="muted" style="margin-top:12px;font-size:11px">Se marca solo: un día cuenta como entrenado en cuanto marcas un ejercicio o registras un peso.</p></div>`;
+  return h;
+}
+
 function weightBlock(){
   const logs=(S.weightLog||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
   const cur=logs.length?logs[logs.length-1].kg:null;
@@ -1344,6 +1444,15 @@ function nextTargetObj(e,last){
 function nextTarget(e,last){const o=nextTargetObj(e,last);return o?`${o.weight} ${LB} × ${o.reps}`:"—";}
 function lastEntry(exId){const l=(S.history||[]).filter(x=>x.exId===exId&&x.weight!=null).sort((a,b)=>a.date<b.date?-1:1);return l.length?l[l.length-1]:null;}
 function bindProgreso(){
+  const shiftMonth=n=>{
+    const now=new Date();
+    const y=calYM?calYM.y:now.getFullYear(), m=calYM?calYM.m:now.getMonth();
+    const d=new Date(y,m+n,1);
+    calYM=(d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth())?null:{y:d.getFullYear(),m:d.getMonth()};
+    renderProgreso();
+  };
+  const cp=$("#calPrev");if(cp)cp.onclick=()=>shiftMonth(-1);
+  const cn=$("#calNext");if(cn&&!cn.disabled)cn.onclick=()=>shiftMonth(1);
   const lw=$("#logWeight");if(lw)lw.onclick=openWeightSheet;
   const eg=$("#editGoal");if(eg)eg.onclick=openGoalSheet;
   const lm=$("#logMeasure");if(lm)lm.onclick=openMeasureSheet;
