@@ -2,8 +2,11 @@
 
 ## Descripción y objetivo
 App personal de entrenamiento de **fuerza** para el Señor Stick. Objetivo: construir un físico
-atlético y magro tipo Tom Holland mediante sobrecarga progresiva. Pensada para usarse **desde el
-celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-Man, descartada).
+atlético, magro y funcional —no de culturista— mediante sobrecarga progresiva. Pensada para usarse
+**desde el celular**. Reemplaza a un prototipo anterior de temática superheroica, ya descartada.
+
+**Convención:** no se nombra a ninguna persona real ni marca de ficción en la app ni en este
+repositorio. Los objetivos se describen por sus características físicas, no por referencias.
 
 ## Ubicación
 `C:\Users\kevin\Documents\KEVIN\02. WORK\03. PROYECTOS PERSONALES\STICK FIT\` (movida desde Downloads
