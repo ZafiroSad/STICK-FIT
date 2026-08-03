@@ -430,8 +430,8 @@ const jsDayToId=()=>{const m={0:"dom",1:"lun",2:"mar",3:"mie",4:"jue",5:"vie",6:
 
 /* ---------- Catálogo semilla de ejercicios ---------- */
 const GROUPS=["Pecho","Espalda","Pierna","Hombro","Brazo","Core"];
-function ex(id,name,group,muscles,sets,reps,eq,steps,errors,tips){
-  return {id,name,group,muscles,sets,reps,eq,steps,errors,tips};
+function ex(id,name,group,muscles,sets,reps,eq,steps,errors,tips,cardio){
+  return {id,name,group,muscles,sets,reps,eq,steps,errors,tips,cardio:!!cardio};
 }
 const SEED_EX=[
   // PECHO
@@ -509,6 +509,10 @@ const SEED_EX=[
     ["De pie, eleva los talones lo máximo posible.","Pausa arriba apretando el gemelo.","Baja lento sintiendo el estiramiento."],
     ["Rebotar sin control.","Rango corto."],
     ["Pausa de 1s arriba y estiramiento completo abajo."]),
+  ex("hiit-sprints","HIIT en sprints","Pierna",["cuadriceps","isquios","gluteo","gemelo"],6,"30s sprint / 90s caminar","Pista/Cinta",
+    ["Trota 5 min antes de la primera serie.","Sprint 30 s al 85-90 % de tu máximo.","Camina 90 s de recuperación activa y repite."],
+    ["Salir al 100 % en la primera serie y no completar las demás.","Hacerlo el día anterior a una sesión de pierna."],
+    ["Empieza con 6 series y sube a 8 en tres semanas. Si el peso en sentadilla baja dos semanas seguidas, recorta a 6."],true),
   // HOMBRO
   ex("press-militar","Press militar","Hombro",["deltoides","triceps","trapecio"],4,"6-8","Barra",
     ["Barra a la altura de la clavícula, core apretado.","Empuja sobre la cabeza extendiendo los codos.","Baja controlado a la clavícula."],
@@ -572,11 +576,11 @@ function it(exId,sets,reps){return {exId,sets,reps};}
 const SEED_ROUTINE={
   id:"protocolo-base",name:"Protocolo Base",
   days:{
-    lun:d("Torso A",false,[it("press-banca",4,"6-8"),it("dominadas-prono",4,"5-8"),it("press-militar",4,"6-8"),it("remo-barra",4,"8-10"),it("curl-barra",3,"8-12"),it("extension-triceps",3,"12-15")]),
+    lun:d("Torso A",false,[it("press-banca",4,"6-8"),it("dominadas-prono",4,"5-8"),it("press-militar",4,"6-8"),it("remo-barra",4,"8-10"),it("elevaciones-laterales",3,"12-15"),it("curl-barra",3,"8-12"),it("extension-triceps",3,"12-15")]),
     mar:d("Pierna A",false,[it("sentadilla",4,"6-8"),it("peso-muerto-rumano",4,"8-10"),it("zancadas",3,"10-12"),it("gemelos",4,"12-15"),it("plancha",3,"40-60s")]),
-    mie:d("Torso B",false,[it("press-inclinado",4,"8-10"),it("dominadas-supinas",4,"6-10"),it("elevaciones-laterales",3,"12-15"),it("remo-mancuerna",3,"10-12"),it("curl-martillo",3,"10-12"),it("fondos-paralelas",3,"8-12")]),
+    mie:d("Torso B",false,[it("press-inclinado",4,"8-10"),it("dominadas-supinas",4,"6-10"),it("elevaciones-laterales",3,"12-15"),it("face-pull",3,"15-20"),it("remo-mancuerna",3,"10-12"),it("curl-martillo",3,"10-12"),it("fondos-paralelas",3,"8-12")]),
     jue:d("Descanso",true,[]),
-    vie:d("Pierna B",false,[it("peso-muerto",4,"5-6"),it("hip-thrust",4,"10-12"),it("sentadilla-bulgara",3,"10-12"),it("elev-piernas",3,"10-15"),it("gemelos",4,"12-15")]),
+    vie:d("Pierna B",false,[it("peso-muerto",4,"5-6"),it("hip-thrust",4,"10-12"),it("sentadilla-bulgara",3,"10-12"),it("elev-piernas",3,"10-15"),it("gemelos",4,"12-15"),it("hiit-sprints",6,"30s sprint / 90s caminar")]),
     sab:d("Descanso",true,[]),
     dom:d("Descanso",true,[]),
   }
@@ -584,7 +588,7 @@ const SEED_ROUTINE={
 
 /* ---------- Estado ---------- */
 const KEY="stickfit-v1";
-const SEED_VERSION=2; // sube este número cuando cambie la rutina semilla para refrescarla en equipos ya usados
+const SEED_VERSION=3; // sube este número cuando cambie la rutina semilla para refrescarla en equipos ya usados
 let S=load();
 function load(){
   try{const raw=JSON.parse(localStorage.getItem(KEY));
@@ -1483,7 +1487,8 @@ function deleteMeasureEntry(date){
 /* ---------- Volumen semanal por grupo muscular ---------- */
 function weeklyVolume(){
   const r=activeRoutine();const vol={};GROUPS.forEach(g=>vol[g]=0);
-  Object.values(r.days).forEach(day=>{if(day.rest)return;(day.exercises||[]).forEach(it=>{const e=getEx(it.exId);if(e&&vol[e.group]!=null)vol[e.group]+=(+it.sets||0);});});
+  // el acondicionamiento (cardio:true) no suma volumen de hipertrofia: distorsionaría la banda 10-20
+  Object.values(r.days).forEach(day=>{if(day.rest)return;(day.exercises||[]).forEach(it=>{const e=getEx(it.exId);if(e&&!e.cardio&&vol[e.group]!=null)vol[e.group]+=(+it.sets||0);});});
   return vol;
 }
 function volumeBlock(){

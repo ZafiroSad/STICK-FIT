@@ -10,7 +10,25 @@ celular**. Reemplaza al viejo prototipo `rutina-tom-holland` (temática Spider-M
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
-- **Versión:** 1.7.0 — **historial de peso y medidas** con corrección y borrado.
+- **Versión:** 1.8.0 — **Protocolo Base revisado** (hombro corregido + acondicionamiento).
+- v1.8.0 (rutina semilla): auditoría de la rutina contra el objetivo declarado (físico atlético magro).
+  El hombro estaba en **7 series/semana**, por debajo de la banda mínima de 10, siendo el deltoides
+  medio el músculo que define la silueta buscada. Correcciones: `elevaciones-laterales` 3×12-15 a
+  **Torso A** y `face-pull` 3×15-20 a **Torso B** → hombro **7 → 13** series con frecuencia 2×,
+  repartidas en dos días en vez de amontonadas en uno. Añadido `hiit-sprints` 6×(30 s / 90 s) al
+  final de **Pierna B**, que era la única carencia frente a la alternativa evaluada: la rutina no
+  tenía acondicionamiento y el % de grasa gobierna la mitad del resultado. Se mantiene el esquema de
+  3 días de descanso (jue/sáb/dom) poniendo el HIIT el mismo día de fuerza, no en un día libre.
+  Sesiones resultantes: Lun 25 · Mar 18 · Mié 23 · Vie 18 series (~65-90 min). `SEED_VERSION` → **3**.
+  Caché SW → `stickfit-v6`.
+- **Decisión (v1.8.0):** `ex()` acepta un 11.º parámetro `cardio`; `weeklyVolume()` **excluye** los
+  ejercicios con `cardio:true`. Sin esto las 6 series de sprints sumaban al grupo Pierna (26 → 32) y
+  la tarjeta de volumen pintaba "alto" un dato que no es volumen de hipertrofia — corrompía la única
+  métrica que gobierna las decisiones de la rutina. El catálogo semilla pasa a **32 ejercicios**.
+- **Pendiente conocido (v1.8.0):** Brazo (9) y Core (6) siguen bajo la banda 10-20 en Protocolo Base.
+  Es un rasgo del diseño Torso/Pierna, no un error; corregirlo exige alargar las sesiones. No se tocó
+  porque no formaba parte del encargo.
+- v1.7.0 — **historial de peso y medidas** con corrección y borrado.
 - v1.7.0 (historial): botón "Historial" en los bloques de Peso corporal y Medidas corporales (solo
   aparece si hay registros) que abre una hoja con la lista completa, más reciente arriba. Peso: fecha,
   valor y diferencia contra el registro anterior, con resumen (nº de registros, días transcurridos y
@@ -104,6 +122,9 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 - `rutina` = plan semanal completo (7 días). Varias guardadas, una activa (`activeRoutineId`).
 - Rutina semilla: **Protocolo Base**, split Torso/Pierna ×2 (Lun Torso A · Mar Pierna A · Mié Torso B
   · Vie Pierna B; Jue/Sáb/Dom descanso). Cambiar la semilla exige subir `SEED_VERSION` en el código.
+- Ejercicio: `{id,name,group,muscles,sets,reps,eq,steps,errors,tips,cardio}`. `cardio:true` marca
+  acondicionamiento (solo `hiit-sprints`): cuenta como ejercicio del día pero **no** suma en
+  `weeklyVolume()`.
 - `history[]`: registros {date, exId, weight, reps, sets:[{weight,reps}]} (weight/reps = mejor serie).
 
 ## Decisiones tomadas (no re-litigar sin discusión)
