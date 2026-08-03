@@ -205,6 +205,17 @@ nav.dock{
 .ex-meta{font-size:11px;color:var(--zinc-500);margin-top:2px}
 .ex-target{font-size:12px;font-weight:700;color:var(--zinc-350);background:rgba(63,63,70,.35);
   padding:5px 10px;border-radius:8px;white-space:nowrap;flex:none}
+.ex-log{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;cursor:pointer;
+  background:rgba(63,63,70,.35);border:1px solid rgba(63,63,70,.5);border-radius:10px;
+  padding:6px 10px;font-family:inherit;color:var(--zinc-350);transition:.2s var(--ease)}
+.ex-log:hover{background:rgba(82,82,91,.45);border-color:rgba(113,113,122,.6);color:#fff}
+.ex-log:active{transform:scale(.96)}
+.ex-log .elv{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px}
+.ex-log .elv svg{width:12px;height:12px}
+.ex-log .elk{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--zinc-500)}
+.ex-log.logged{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.30);color:var(--emerald)}
+.ex-log.logged .elk{color:rgba(52,211,153,.75)}
 
 /* ── Barra de progreso ── */
 .bar{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
@@ -354,6 +365,15 @@ nav.dock{
   padding:9px 12px;font-size:14px;font-weight:600;color:#fff;outline:none;font-family:inherit;
   font-variant-numeric:tabular-nums;transition:border-color .2s ease,background .2s ease}
 .setrow input:focus{border-color:var(--zinc-600);background:rgba(9,9,11,.85)}
+.sethist{border-top:1px solid rgba(63,63,70,.3);padding:9px 0}
+.sethist:first-of-type{border-top:none}
+.sethist .shd{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.setpills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.setpill{display:inline-flex;align-items:baseline;gap:4px;padding:3px 8px;border-radius:999px;
+  background:rgba(39,39,42,.6);border:1px solid rgba(63,63,70,.45);font-size:11px;
+  font-variant-numeric:tabular-nums;color:var(--zinc-300)}
+.setpill i{font-style:normal;font-size:9px;font-weight:800;color:var(--zinc-550)}
+.setpill.best{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.3);color:var(--emerald)}
 </style>
 </head>
 <body>
@@ -589,6 +609,8 @@ const SEED_ROUTINE={
 /* ---------- Estado ---------- */
 const KEY="stickfit-v1";
 const SEED_VERSION=3; // sube este número cuando cambie la rutina semilla para refrescarla en equipos ya usados
+const LB="lb"; // unidad de las cargas de fuerza (el peso corporal y la nutrición siguen en kg)
+function kgToLb(kg){return +(kg*2.20462).toFixed(1);}
 let S=load();
 function load(){
   try{const raw=JSON.parse(localStorage.getItem(KEY));
@@ -603,11 +625,20 @@ function load(){
       raw.weightLog=raw.weightLog||[];
       raw.measures=raw.measures||[];
       if(raw.weightGoal===undefined)raw.weightGoal=null;
+      // migración: las cargas de fuerza pasan de kg a lb (el peso corporal y la nutrición siguen en kg)
+      if(raw.liftUnit!=="lb"){
+        (raw.history||[]).forEach(l=>{
+          if(l.weight!=null)l.weight=kgToLb(l.weight);
+          if(Array.isArray(l.sets))l.sets.forEach(s=>{if(s.weight!=null)s.weight=kgToLb(s.weight);});
+        });
+        raw.liftUnit="lb";
+        localStorage.setItem(KEY,JSON.stringify(raw));
+      }
       return raw;
     }
   }catch(e){}
   return {onboarded:false,seedVersion:SEED_VERSION,activeRoutineId:SEED_ROUTINE.id,routines:[structuredClone(SEED_ROUTINE)],
-    customEx:[],imgUrls:{},checks:{},history:[],profile:null,weightLog:[],weightGoal:null,measures:[]};
+    customEx:[],imgUrls:{},checks:{},history:[],profile:null,weightLog:[],weightGoal:null,measures:[],liftUnit:"lb"};
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(S));}
 function allEx(){return [...SEED_EX,...(S.customEx||[])];}
@@ -740,20 +771,23 @@ function renderHoy(){
     const done=isChecked(selectedDay,i);
     const le=lastEntry(item.exId);
     const sug=le?nextTargetObj(e,le):null;
+    const hoy=todayEntry(item.exId);
     h+=`<div class="ex${done?" done":""}" data-idx="${i}">
       <div class="chk" data-check="${i}">${IC.check}</div>
       <div class="ex-body" data-open="${item.exId}">
         <div class="ex-name">${e.name}</div>
-        <div class="ex-meta">${e.group}${sug?` · <span style="color:var(--emerald);font-weight:700">objetivo ${sug.weight} kg × ${sug.reps}</span>`:""}</div>
+        <div class="ex-meta">${e.group} · ${item.sets}×${item.reps}${sug?` · <span style="color:var(--emerald);font-weight:700">objetivo ${sug.weight} ${LB} × ${sug.reps}</span>`:""}</div>
       </div>
-      <div class="ex-target mono">${item.sets}×${item.reps}</div>
+      <button class="ex-log${hoy?" logged":""}" data-log="${i}" title="Registrar peso serie por serie">
+        ${hoy?`<span class="elv">${setsSummary(hoy)}</span><span class="elk">${entrySets(hoy).length} series</span>`
+             :`<span class="elv">${IC.plus} Peso</span>`}
+      </button>
     </div>`;
   });
   h+=`</div>`;
   h+=`<div style="display:flex;gap:8px;padding:12px 0 6px">
-    <button class="btn-secondary" style="flex:1" id="logDay">Registrar pesos</button>
-    <button class="btn-secondary" id="resetDay" style="flex:none;width:46px;padding:0" title="Reiniciar día">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5"/></svg>
+    <button class="btn-secondary" style="flex:1" id="resetDay">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5"/></svg>Reiniciar día
     </button>
   </div></div>`;
   $("#v-hoy").innerHTML=h;bindHoy();
@@ -767,62 +801,104 @@ function bindHoy(){
     if(nowDone){try{if(navigator.vibrate)navigator.vibrate(15);}catch(_){}}
   });
   $("#v-hoy").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openExercise(b.dataset.open));
+  $("#v-hoy").querySelectorAll("[data-log]").forEach(b=>b.onclick=e=>{
+    e.stopPropagation();openExLog(selectedDay,+b.dataset.log);
+  });
   const rd=$("#resetDay");if(rd)rd.onclick=()=>{
     activeRoutine().days[selectedDay].exercises.forEach((_,i)=>delete S.checks[checkKey(selectedDay,i)]);
     save();renderHoy();toast("Día reiniciado");
   };
-  const ld=$("#logDay");if(ld)ld.onclick=()=>openLogSheet(selectedDay);
 }
 
-/* ---------- Registro de pesos ---------- */
+/* ---------- Registro de pesos (por ejercicio, serie por serie) ---------- */
 function nSetsOf(item){return Math.max(1,Math.min(12,parseInt(item.sets)||3));}
-function openLogSheet(dayId){
+function epley(x){return (x.weight||0)*(1+(x.reps||0)/30);}
+function bestSet(rows){return rows.reduce((a,b)=>epley(b)>epley(a)?b:a);}
+function entrySets(l){return (l.sets&&l.sets.length)?l.sets:[{weight:l.weight,reps:l.reps}];}
+function todayEntry(exId){
+  const t=todayKey();
+  return (S.history||[]).filter(l=>l.exId===exId&&l.date===t).slice(-1)[0]||null;
+}
+function setsSummary(l){
+  const ws=entrySets(l).map(s=>s.weight).filter(w=>w!=null);
+  if(!ws.length)return "—";
+  const mn=Math.min(...ws),mx=Math.max(...ws);
+  return (mn===mx?mn:`${mn}-${mx}`)+" "+LB;
+}
+function setPills(l){
+  const rows=entrySets(l);
+  const bi=rows.indexOf(bestSet(rows));
+  return `<div class="setpills">`+rows.map((s,i)=>
+    `<span class="setpill${i===bi&&rows.length>1?" best":""}"><i>S${i+1}</i>${s.weight!=null?s.weight+" "+LB:"—"}${s.reps!=null?" × "+s.reps:""}</span>`
+  ).join("")+`</div>`;
+}
+function setRowHTML(si,w,r){
+  return `<div class="setrow" data-row="${si}">
+    <span class="setlbl">Serie ${si+1}</span>
+    <input class="set-w" type="number" inputmode="decimal" step="0.5" data-set="${si}" value="${w!=null?w:''}" placeholder="${LB}">
+    <input class="set-r" type="number" inputmode="numeric" data-set="${si}" value="${r!=null?r:''}" placeholder="reps">
+  </div>`;
+}
+function openExLog(dayId,idx){
   const day=activeRoutine().days[dayId];
-  let h=`<div class="sheet-grab"></div><div class="sheet-head"><div><div class="h2">Registrar sesión</div><div class="sub" style="margin-top:2px">${DAYNAME[dayId]} · ${day.focus}</div></div>
-    <button class="close-x" data-close>×</button></div>
-    <p class="muted" style="margin:6px 0 16px">Anota cada serie (vienen pre-cargadas con tu objetivo). Si todas salieron igual, solo pulsa Guardar. La mejor serie cuenta para tu progresión.</p>`;
-  day.exercises.forEach((item,i)=>{
-    const e=getEx(item.exId);if(!e)return;
-    const le=lastEntry(item.exId);
-    const sug=le?nextTargetObj(e,le):null;
-    const nS=nSetsOf(item);
-    h+=`<div class="logex">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
-        <div class="h3" style="font-size:14px">${e.name}</div>
-        <div class="muted mono">objetivo ${sug?`${sug.weight}×${sug.reps}`:`${item.sets}×${item.reps}`}</div>
-      </div>
-      <div class="setrow setrow-h"><span class="setlbl"></span><span class="setlbl">Peso (kg)</span><span class="setlbl">Reps</span></div>`;
-    for(let si=0;si<nS;si++){
-      h+=`<div class="setrow">
-        <span class="setlbl">Serie ${si+1}</span>
-        <input class="set-w" type="number" inputmode="decimal" data-ei="${i}" data-set="${si}" value="${sug?sug.weight:''}" placeholder="kg">
-        <input class="set-r" type="number" inputmode="numeric" data-ei="${i}" data-set="${si}" value="${sug?sug.reps:''}" placeholder="reps">
-      </div>`;
-    }
-    h+=`</div>`;
-  });
-  h+=`<button class="btn-primary" style="width:100%;margin-top:8px" id="saveLog">Guardar sesión</button>`;
-  openSheet(h);
-  $("#saveLog").onclick=()=>{
-    let n=0;const date=todayKey();
-    const e1=x=>(x.weight||0)*(1+(x.reps||0)/30);
-    day.exercises.forEach((item,i)=>{
-      const nS=nSetsOf(item);const rows=[];
-      for(let si=0;si<nS;si++){
-        const w=$(`.set-w[data-ei="${i}"][data-set="${si}"]`);
-        const r=$(`.set-r[data-ei="${i}"][data-set="${si}"]`);
-        const wv=w&&w.value?parseFloat(w.value):null;
-        const rv=r&&r.value?parseInt(r.value):null;
-        if(wv||rv)rows.push({weight:wv,reps:rv});
-      }
-      if(rows.length){
-        const best=rows.reduce((a,b)=>e1(b)>e1(a)?b:a);
-        S.history.push({id:uid(),date,exId:item.exId,weight:best.weight,reps:best.reps,sets:rows});
-        n++;
-      }
+  const item=day.exercises[idx];if(!item)return;
+  const e=getEx(item.exId);if(!e)return;
+  const prev=todayEntry(item.exId);
+  const le=lastEntry(item.exId);
+  const sug=le?nextTargetObj(e,le):null;
+  const rows=prev?entrySets(prev):Array.from({length:nSetsOf(item)},()=>({weight:sug?sug.weight:null,reps:sug?sug.reps:null}));
+
+  let h=`<div class="sheet-grab"></div><div class="sheet-head">
+    <div style="min-width:0"><span class="label-mono">${DAYNAME[dayId]} · ${day.focus}</span>
+      <div class="h2" style="margin-top:3px">${e.name}</div></div>
+    <button class="close-x" data-close>×</button></div>`;
+  h+=`<div style="display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap">
+    <span class="chip">plan ${item.sets}×${item.reps}</span>
+    ${sug?`<span class="chip" style="background:rgba(52,211,153,.12);color:var(--emerald)">objetivo ${sug.weight} ${LB} × ${sug.reps}</span>`:""}</div>`;
+  h+=`<p class="muted" style="margin:8px 0 14px">Cada serie se guarda tal cual la hagas: si la 1.ª fue 45 y la 3.ª 40, así queda. No se promedia nada.</p>`;
+  h+=`<div class="setrow setrow-h"><span class="setlbl"></span><span class="setlbl">Peso (${LB})</span><span class="setlbl">Reps</span></div>
+    <div id="setsBox">${rows.map((s,si)=>setRowHTML(si,s.weight,s.reps)).join("")}</div>
+    <button class="btn-secondary" id="addSet" style="width:100%;margin-top:4px">${IC.plus} Añadir serie</button>`;
+  h+=`<button class="btn-primary" style="width:100%;margin-top:10px" id="saveLog">${prev?"Actualizar registro":"Guardar ejercicio"}</button>`;
+  if(prev)h+=`<button class="btn-danger" style="width:100%;margin-top:8px" id="delLog">Eliminar registro de hoy</button>`;
+
+  const logs=(S.history||[]).filter(l=>l.exId===item.exId).sort((a,b)=>a.date<b.date?-1:1).slice(-8).reverse();
+  if(logs.length){
+    h+=`<div class="tech" style="margin-top:18px"><h4>Historial de este ejercicio</h4></div>`;
+    logs.forEach(l=>{
+      h+=`<div class="sethist">
+        <div class="shd"><span class="muted mono">${fechaCorta(l.date)}</span>
+          <span class="mono" style="font-size:11px;color:var(--zinc-500)">${entrySets(l).length} series</span></div>
+        ${setPills(l)}</div>`;
     });
-    save();closeSheet();renderHoy();toast(n?`${n} ejercicio${n>1?'s':''} registrado${n>1?'s':''}`:"Sin cambios");
+    h+=`<p class="muted" style="margin-top:10px;font-size:11px">La serie marcada en verde es la mejor (1RM estimado) y es la que manda tu próximo objetivo.</p>`;
+  }
+  openSheet(h);
+
+  $("#addSet").onclick=()=>{
+    const box=$("#setsBox");const n=box.querySelectorAll(".setrow").length;
+    if(n>=12)return toast("Máximo 12 series");
+    box.insertAdjacentHTML("beforeend",setRowHTML(n,null,null));
   };
+  $("#saveLog").onclick=()=>{
+    const out=[];
+    $("#setsBox").querySelectorAll(".setrow").forEach(row=>{
+      const w=row.querySelector(".set-w"),r=row.querySelector(".set-r");
+      const wv=w&&w.value!==""?parseFloat(w.value):null;
+      const rv=r&&r.value!==""?parseInt(r.value):null;
+      if(wv!=null||rv!=null)out.push({weight:wv,reps:rv});
+    });
+    if(!out.length)return toast("Anota al menos una serie");
+    const best=bestSet(out);
+    if(prev){Object.assign(prev,{weight:best.weight,reps:best.reps,sets:out});}
+    else S.history.push({id:uid(),date:todayKey(),exId:item.exId,weight:best.weight,reps:best.reps,sets:out});
+    S.checks[checkKey(dayId,idx)]=true;
+    save();closeSheet();renderHoy();
+    toast(prev?"Registro actualizado":`${e.name} registrado`);
+  };
+  const dl=$("#delLog");if(dl)dl.onclick=()=>confirmSheet({title:"Eliminar registro",message:`¿Borrar las series de hoy de "${e.name}"?`,cta:"Eliminar",danger:true,onConfirm:()=>{
+    S.history=S.history.filter(l=>l!==prev);save();closeSheet();renderHoy();toast("Registro eliminado");
+  }});
 }
 
 /* ============================================================
@@ -1002,8 +1078,13 @@ function openExercise(exId){
   // progresión
   const logs=S.history.filter(l=>l.exId===exId);
   if(logs.length){
-    h+=`<div class="tech"><h4>Tu progresión</h4></div><div style="display:flex;flex-direction:column;gap:4px">`;
-    logs.slice(-6).forEach(l=>{h+=`<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-top:1px solid rgba(63,63,70,.25)"><span class="muted mono">${l.date}${l.sets&&l.sets.length>1?` · ${l.sets.length} series`:""}</span><span class="mono" style="color:var(--zinc-300)">${l.weight?l.weight+" kg":""} ${l.reps?"· "+l.reps+" reps":""}</span></div>`;});
+    h+=`<div class="tech"><h4>Tu progresión</h4></div><div>`;
+    logs.slice(-6).reverse().forEach(l=>{
+      h+=`<div class="sethist">
+        <div class="shd"><span class="muted mono">${fechaCorta(l.date)}</span>
+          <span class="mono" style="font-size:11px;color:var(--zinc-500)">${entrySets(l).length} series</span></div>
+        ${setPills(l)}</div>`;
+    });
     h+=`</div>`;
   }
   h+=`<div class="tech"><h4>Ejecución</h4><ol>${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>`;
@@ -1212,7 +1293,7 @@ function strengthBlock(){
   (S.history||[]).forEach(l=>{if(l.weight!=null)(byEx[l.exId]=byEx[l.exId]||[]).push(l);});
   const ids=Object.keys(byEx);
   if(!ids.length){
-    return `<div class="card" style="padding:24px;text-align:center"><div class="ei" style="margin:0 auto 12px;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:rgba(63,63,70,.2);border:1px solid rgba(63,63,70,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--zinc-500)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div><div class="h3" style="font-size:14px">Sin datos de fuerza aún</div><p class="sub" style="margin-top:6px">Tras entrenar, ve a <b style="color:var(--zinc-300)">Hoy → Registrar pesos</b>. Aquí verás cómo sube tu fuerza y tu próximo objetivo.</p></div>`;
+    return `<div class="card" style="padding:24px;text-align:center"><div class="ei" style="margin:0 auto 12px;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:rgba(63,63,70,.2);border:1px solid rgba(63,63,70,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--zinc-500)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div><div class="h3" style="font-size:14px">Sin datos de fuerza aún</div><p class="sub" style="margin-top:6px">Tras entrenar, en <b style="color:var(--zinc-300)">Hoy</b> toca el botón de la derecha de cada ejercicio y anota tus series. Aquí verás cómo sube tu fuerza y tu próximo objetivo.</p></div>`;
   }
   ids.sort((a,b)=>{const la=byEx[a],lb=byEx[b];return (lb[lb.length-1].date<la[la.length-1].date)?-1:1;});
   let h=`<div class="list-stagger">`;
@@ -1227,18 +1308,20 @@ function strengthBlock(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
         <div style="min-width:0"><div class="h3" style="font-size:14px">${e.name}</div>
           <div class="ex-meta">${e.group} · ${logs.length} sesi${logs.length>1?'ones':'ón'}</div></div>
-        <div style="text-align:right"><div class="mono" style="font-size:18px;font-weight:800">${last.weight}<small style="color:var(--zinc-500);font-size:11px"> kg</small></div>
-          <div class="mono" style="font-size:11px;font-weight:700;color:${chg>0?'var(--emerald)':chg<0?'var(--rose)':'var(--zinc-500)'}">${chg>0?"▲ +"+chg.toFixed(1):chg<0?"▼ "+chg.toFixed(1):"sin cambio"}${chg!==0?" kg":""}</div></div>
+        <div style="text-align:right"><div class="mono" style="font-size:18px;font-weight:800">${last.weight}<small style="color:var(--zinc-500);font-size:11px"> ${LB}</small></div>
+          <div class="mono" style="font-size:11px;font-weight:700;color:${chg>0?'var(--emerald)':chg<0?'var(--rose)':'var(--zinc-500)'}">${chg>0?"▲ +"+chg.toFixed(1):chg<0?"▼ "+chg.toFixed(1):"sin cambio"}${chg!==0?" "+LB:""}</div></div>
       </div>
-      ${sparkline(logs.map(l=>l.weight),"#34d399")}
+      <div class="label" style="letter-spacing:.1em;margin-bottom:4px">Última sesión · serie por serie</div>
+      ${setPills(last)}
+      <div style="margin-top:10px">${sparkline(logs.map(l=>l.weight),"#34d399")}</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(63,63,70,.3)">
-        <div><div class="label" style="letter-spacing:.1em">1RM estimado</div><div class="mono" style="font-weight:700;font-size:13px;color:var(--zinc-300)">${e1rm} kg</div></div>
+        <div><div class="label" style="letter-spacing:.1em">1RM estimado</div><div class="mono" style="font-weight:700;font-size:13px;color:var(--zinc-300)">${e1rm} ${LB}</div></div>
         <div style="text-align:right"><div class="label" style="letter-spacing:.1em">Próximo objetivo</div><div class="mono" style="font-weight:700;font-size:13px;color:var(--zinc-100)">${sug}</div></div>
       </div>
     </div>`;
   });
   h+=`</div>`;
-  h+=`<div style="margin-top:6px;padding:12px 14px;border-radius:12px;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2)"><p class="sub" style="font-size:12px"><b style="color:#fff">Ritmo natural esperado:</b> ~2.5 kg cada 2-3 semanas en compuestos (banca, sentadilla, peso muerto) y más lento en aislamientos. Si superas el rango de reps, sube el peso; si no, suma una repetición.</p></div>`;
+  h+=`<div style="margin-top:6px;padding:12px 14px;border-radius:12px;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2)"><p class="sub" style="font-size:12px"><b style="color:#fff">Ritmo natural esperado:</b> ~5 lb cada 2-3 semanas en compuestos (banca, sentadilla, peso muerto) y más lento en aislamientos. Si superas el rango de reps, sube el peso; si no, suma una repetición.</p></div>`;
   return h;
 }
 function nextTargetObj(e,last){
@@ -1249,12 +1332,12 @@ function nextTargetObj(e,last){
   const lower=m?parseInt(m[1]):upper;
   if(timeBased)return {weight:last.weight,reps:last.reps||0};
   if((last.reps||0)>=upper){
-    const inc=/Barra|Máquina|Prensa/i.test(e.eq)?2.5:1;
+    const inc=/Barra|Máquina|Prensa/i.test(e.eq)?5:2.5; // lb
     return {weight:+(last.weight+inc).toFixed(1),reps:lower};
   }
   return {weight:last.weight,reps:(last.reps||0)+1};
 }
-function nextTarget(e,last){const o=nextTargetObj(e,last);return o?`${o.weight} kg × ${o.reps}`:"—";}
+function nextTarget(e,last){const o=nextTargetObj(e,last);return o?`${o.weight} ${LB} × ${o.reps}`:"—";}
 function lastEntry(exId){const l=(S.history||[]).filter(x=>x.exId===exId&&x.weight!=null).sort((a,b)=>a.date<b.date?-1:1);return l.length?l[l.length-1]:null;}
 function bindProgreso(){
   const lw=$("#logWeight");if(lw)lw.onclick=openWeightSheet;

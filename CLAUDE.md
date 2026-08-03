@@ -13,7 +13,23 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
-- **Versión:** 1.8.0 — **Protocolo Base revisado** (hombro corregido + acondicionamiento).
+- **Versión:** 1.9.0 — **registro por ejercicio, serie por serie, en libras**.
+- v1.9.0 (registro): desaparece el botón único "Registrar pesos" del día. Cada fila de **Hoy** lleva su
+  propio botón a la derecha ("+ Peso"); al tocarlo se abre la hoja de **ese** ejercicio con una fila por
+  serie (pre-cargadas con el objetivo), botón "Añadir serie" hasta 12, historial completo del ejercicio
+  serie por serie y "Eliminar registro de hoy". Guardar **marca el ejercicio como hecho**; si ya hay
+  registro de hoy el botón muestra el rango de carga (`85-100 lb`) y nº de series, y la hoja **edita**
+  esa entrada en vez de duplicarla. Las cargas pasan de **kg a lb**; el peso corporal y la nutrición
+  siguen en kg (Mifflin-St Jeor y g/kg lo exigen). Caché SW → `stickfit-v7`.
+- **Decisión (v1.9.0):** ninguna vista colapsa ya las series en un solo número. `setPills()` pinta cada
+  serie tal como se registró (`S1 100 lb × 10 · S2 95 lb × 9 …`) en Hoy, en la ficha del ejercicio y en
+  Progreso, con la mejor serie resaltada en verde. `weight`/`reps` de la entrada se conservan = mejor
+  serie (1RM Epley) porque son lo que alimenta la progresión, pero dejan de ser lo que se muestra.
+- **Decisión (v1.9.0):** migración de unidades one-shot con la bandera `liftUnit`. Al cargar, si no es
+  `"lb"` se multiplica ×2.20462 todo `history[].weight` y `history[].sets[].weight` y se marca. Sin eso
+  los registros viejos en kg se leerían como libras y la progresión daría saltos falsos. Incrementos de
+  sobrecarga en `nextTargetObj()`: **5 lb** en barra/máquina/prensa, **2.5 lb** en el resto.
+- v1.8.0 — **Protocolo Base revisado** (hombro corregido + acondicionamiento).
 - v1.8.0 (rutina semilla): auditoría de la rutina contra el objetivo declarado (físico atlético magro).
   El hombro estaba en **7 series/semana**, por debajo de la banda mínima de 10, siendo el deltoides
   medio el músculo que define la silueta buscada. Correcciones: `elevaciones-laterales` 3×12-15 a
@@ -110,9 +126,9 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
   + medidas corporales (cintura/pecho/brazo/muslo con tendencia e **historial**) + fuerza por ejercicio (sparkline,
   1RM Epley, próximo objetivo) + volumen semanal por grupo muscular (series/grupo de la rutina activa,
   banda 10-20) + respaldo Exportar/Importar. Datos: `weightLog[]`, `weightGoal`, `measures[]`.
-- **Hoy:** selector de semana, checklist del día activo, barra de progreso, botón "Registrar pesos"
-  (registro **set por set**: una fila por serie, pre-cargadas con el objetivo). Los checks se guardan
-  por fecha (`checks[fecha|dia|idx]`).
+- **Hoy:** selector de semana, checklist del día activo, barra de progreso y, **por ejercicio**, su
+  propio botón de registro (hoja con una fila por serie en **lb**, pre-cargadas con el objetivo).
+  Los checks se guardan por fecha (`checks[fecha|dia|idx]`).
 - **Rutinas:** lista de planes; crear / renombrar / duplicar / activar / eliminar. Editor por día
   (enfoque, descanso, añadir/quitar ejercicios del catálogo, series/reps).
 - **Ejercicios:** catálogo de 31 ejercicios de fuerza agrupados por músculo. Ficha al click con
@@ -128,7 +144,11 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 - Ejercicio: `{id,name,group,muscles,sets,reps,eq,steps,errors,tips,cardio}`. `cardio:true` marca
   acondicionamiento (solo `hiit-sprints`): cuenta como ejercicio del día pero **no** suma en
   `weeklyVolume()`.
-- `history[]`: registros {date, exId, weight, reps, sets:[{weight,reps}]} (weight/reps = mejor serie).
+- `history[]`: registros {date, exId, weight, reps, sets:[{weight,reps}]} en **lb**. `sets[]` es la
+  verdad (cada serie tal cual se hizo) y es lo que se muestra; `weight`/`reps` = mejor serie por Epley,
+  se usan solo para la progresión. Una entrada por ejercicio y día: volver a guardar la edita.
+- `liftUnit`: bandera de la migración kg→lb del historial de fuerza. El peso corporal (`weightLog`,
+  `weightGoal`) y la nutrición siguen en kg; las medidas en cm.
 
 ## Decisiones tomadas (no re-litigar sin discusión)
 1. Un solo HTML + localStorage (no React/Vite) — elegido por portabilidad.
