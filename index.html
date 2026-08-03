@@ -205,15 +205,18 @@ nav.dock{
 .ex-meta{font-size:11px;color:var(--zinc-500);margin-top:2px}
 .ex-target{font-size:12px;font-weight:700;color:var(--zinc-350);background:rgba(63,63,70,.35);
   padding:5px 10px;border-radius:8px;white-space:nowrap;flex:none}
-.ex-log{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;cursor:pointer;
-  background:rgba(63,63,70,.35);border:1px solid rgba(63,63,70,.5);border-radius:10px;
-  padding:6px 10px;font-family:inherit;color:var(--zinc-350);transition:.2s var(--ease)}
+.ex-log{flex:none;width:52px;height:52px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;cursor:pointer;
+  background:rgba(63,63,70,.35);border:1px solid rgba(63,63,70,.5);border-radius:12px;
+  padding:2px;font-family:inherit;color:var(--zinc-350);transition:.2s var(--ease)}
 .ex-log:hover{background:rgba(82,82,91,.45);border-color:rgba(113,113,122,.6);color:#fff}
 .ex-log:active{transform:scale(.96)}
-.ex-log .elv{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;
-  display:inline-flex;align-items:center;gap:5px}
-.ex-log .elv svg{width:12px;height:12px}
-.ex-log .elk{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--zinc-500)}
+.ex-log .elv{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;
+  line-height:1.1;display:inline-flex;align-items:center;justify-content:center;gap:3px}
+.ex-log .elv svg{width:14px;height:14px}
+.ex-log.logged .elv{font-size:10px;letter-spacing:-.02em}
+.ex-log .elk{font-size:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  line-height:1.1;white-space:nowrap;color:var(--zinc-500)}
 .ex-log.logged{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.30);color:var(--emerald)}
 .ex-log.logged .elk{color:rgba(52,211,153,.75)}
 
@@ -778,9 +781,9 @@ function renderHoy(){
         <div class="ex-name">${e.name}</div>
         <div class="ex-meta">${e.group} · ${item.sets}×${item.reps}${sug?` · <span style="color:var(--emerald);font-weight:700">objetivo ${sug.weight} ${LB} × ${sug.reps}</span>`:""}</div>
       </div>
-      <button class="ex-log${hoy?" logged":""}" data-log="${i}" title="Registrar peso serie por serie">
-        ${hoy?`<span class="elv">${setsSummary(hoy)}</span><span class="elk">${entrySets(hoy).length} series</span>`
-             :`<span class="elv">${IC.plus} Peso</span>`}
+      <button class="ex-log${hoy?" logged":""}" data-log="${i}" title="${hoy?`Editar: ${setsSummary(hoy)}`:"Registrar peso serie por serie"}">
+        ${hoy?`<span class="elv">${setsRange(hoy)}</span><span class="elk">${LB} ×${entrySets(hoy).length}</span>`
+             :`<span class="elv">${IC.plus}</span><span class="elk">Peso</span>`}
       </button>
     </div>`;
   });
@@ -819,12 +822,13 @@ function todayEntry(exId){
   const t=todayKey();
   return (S.history||[]).filter(l=>l.exId===exId&&l.date===t).slice(-1)[0]||null;
 }
-function setsSummary(l){
+function setsRange(l){
   const ws=entrySets(l).map(s=>s.weight).filter(w=>w!=null);
   if(!ws.length)return "—";
   const mn=Math.min(...ws),mx=Math.max(...ws);
-  return (mn===mx?mn:`${mn}-${mx}`)+" "+LB;
+  return mn===mx?String(mn):`${mn}-${mx}`;
 }
+function setsSummary(l){const r=setsRange(l);return r==="—"?r:r+" "+LB;}
 function setPills(l){
   const rows=entrySets(l);
   const bi=rows.indexOf(bestSet(rows));
