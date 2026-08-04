@@ -195,11 +195,23 @@ nav.dock{
   transition:border-color .2s,background .2s}
 .ex:active{transform:scale(.99)}
 .chk{width:24px;height:24px;border-radius:8px;border:2px solid var(--zinc-600);flex:none;cursor:pointer;
-  display:grid;place-items:center;transition:.2s;background:transparent}
-.chk svg{width:13px;height:13px;opacity:0;transform:scale(.5);transition:.2s}
-.ex.done .chk{background:var(--emerald);border-color:var(--emerald)}
+  display:grid;place-items:center;background:transparent;
+  transition:background .22s var(--ease),border-color .22s var(--ease),transform .22s var(--ease)}
+.chk:active{transform:scale(.88)}
+/* El visto entra con un rebote corto: la curva pasa de 1 y vuelve, así el marcado se siente físico */
+.chk svg{width:13px;height:13px;opacity:0;transform:scale(.4);
+  transition:opacity .16s var(--ease),transform .26s cubic-bezier(.34,1.56,.64,1)}
+.ex.done .chk{background:var(--emerald);border-color:var(--emerald);animation:chkpop .3s var(--ease)}
 .ex.done .chk svg{opacity:1;transform:scale(1)}
-.ex.done .ex-name{color:var(--zinc-500);text-decoration:line-through}
+@keyframes chkpop{0%{transform:scale(1)}45%{transform:scale(1.16)}100%{transform:scale(1)}}
+/* El tachado se dibuja de izquierda a derecha: `text-decoration` no se puede animar, así que
+   es un degradado de fondo que crece. `display:inline` + `box-decoration-break:clone` hacen que
+   un nombre de dos líneas quede tachado en las dos, no con una raya suelta en la mitad. */
+.ex-name{display:inline;background-image:linear-gradient(currentColor,currentColor);
+  background-repeat:no-repeat;background-position:0 58%;background-size:0% 1.5px;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+  transition:color .28s var(--ease),background-size .3s var(--ease)}
+.ex.done .ex-name{color:var(--zinc-500);background-size:100% 1.5px}
 .ex-body{flex:1;min-width:0;cursor:pointer}
 .ex-name{font-size:14px;font-weight:700;color:var(--zinc-100)}
 .ex-meta{font-size:11px;color:var(--zinc-500);margin-top:2px}
@@ -836,8 +848,8 @@ function renderHoy(){
   const pct=dayProgress(selectedDay);
   h+=`<div class="card" style="padding:16px 16px 6px;margin-top:18px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-      <div class="bar"><i style="width:${pct}%"></i></div>
-      <div class="mono" style="font-size:16px;font-weight:800;min-width:42px;text-align:right">${pct}%</div>
+      <div class="bar"><i id="dayBar" style="width:${pct}%"></i></div>
+      <div class="mono" id="dayPct" style="font-size:16px;font-weight:800;min-width:42px;text-align:right">${pct}%</div>
     </div>`;
   h+=`<div class="list-stagger">`;
   day.exercises.forEach((item,i)=>{
@@ -880,13 +892,32 @@ function measureReminderBanner(){
     </div>
     <span style="flex:none;color:var(--zinc-500)">${IC.chevron}</span></div>`;
 }
+/* ---------- Marcado sin re-render ----------
+   Antes, marcar un ejercicio llamaba a renderHoy(): el nodo del check se destruía y volvía a
+   nacer ya marcado, así que la transición no tenía estado previo desde el cual animar y, de
+   paso, la entrada escalonada de la lista se relanzaba entera. Aquí se tocan solo las tres
+   cosas que de verdad cambian: la fila, la barra del día y la píldora de la semana. */
+function paintDayProgress(){
+  const pct=dayProgress(selectedDay);
+  const bar=$("#dayBar"),num=$("#dayPct");
+  if(bar)bar.style.width=pct+"%";
+  if(num)num.textContent=pct+"%";
+  const pill=$("#v-hoy").querySelector(`.daypill[data-day="${selectedDay}"]`);
+  if(pill)pill.classList.toggle("complete",pct===100);
+}
+function setCheck(i,done){
+  const k=checkKey(selectedDay,i);
+  if(done)S.checks[k]=true;else delete S.checks[k]; // borrar en vez de guardar false: no deja basura en el respaldo
+  const row=$("#v-hoy").querySelector(`.ex[data-idx="${i}"]`);
+  if(row)row.classList.toggle("done",done);
+}
 function bindHoy(){
   const mn=$("#measNotice");if(mn)mn.onclick=()=>{mzOpen=true;go("progreso");}; // el aviso lleva a la tarjeta ya abierta
   $("#v-hoy").querySelectorAll(".daypill").forEach(p=>p.onclick=()=>{selectedDay=p.dataset.day;renderHoy();});
   $("#v-hoy").querySelectorAll("[data-check]").forEach(c=>c.onclick=e=>{
-    e.stopPropagation();const i=+c.dataset.check;const k=checkKey(selectedDay,i);
-    const nowDone=!S.checks[k];
-    S.checks[k]=nowDone;save();renderHoy();
+    e.stopPropagation();const i=+c.dataset.check;
+    const nowDone=!isChecked(selectedDay,i);
+    setCheck(i,nowDone);save();paintDayProgress();
     if(nowDone){try{if(navigator.vibrate)navigator.vibrate(15);}catch(_){}}
   });
   $("#v-hoy").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openExercise(b.dataset.open));
@@ -894,8 +925,8 @@ function bindHoy(){
     e.stopPropagation();openExLog(selectedDay,+b.dataset.log);
   });
   const rd=$("#resetDay");if(rd)rd.onclick=()=>{
-    activeRoutine().days[selectedDay].exercises.forEach((_,i)=>delete S.checks[checkKey(selectedDay,i)]);
-    save();renderHoy();toast("Día reiniciado");
+    activeRoutine().days[selectedDay].exercises.forEach((_,i)=>setCheck(i,false));
+    save();paintDayProgress();toast("Día reiniciado");
   };
 }
 

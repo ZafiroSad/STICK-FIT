@@ -13,6 +13,26 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
+- **Versión:** 1.13.0 — **marcar un ejercicio ya no re-renderiza la vista Hoy**.
+- v1.13.0 (marcado fluido): marcar el check llamaba a `renderHoy()`, que reconstruía el `innerHTML`
+  entero. Efecto: la animación del check nunca se veía (el nodo nacía ya marcado, sin estado previo
+  desde el cual animar), la entrada escalonada `list-stagger` se relanzaba en toda la lista y el
+  scroll saltaba. Ahora el click toca solo lo que cambia (`setCheck` + `paintDayProgress`): la clase
+  de la fila, el ancho de la barra (`#dayBar`), el porcentaje (`#dayPct`) y la píldora del día.
+  "Reiniciar día" usa el mismo camino. Caché SW → `stickfit-v11`.
+- v1.13.0 (animación): el visto entra con rebote corto (`cubic-bezier(.34,1.56,.64,1)`) y la casilla
+  hace un `chkpop` del 116 %. El tachado del nombre pasa de `text-decoration:line-through` —que no es
+  animable— a un degradado de fondo que crece de izquierda a derecha.
+- **Decisión (v1.13.0):** el tachado usa `display:inline` + `box-decoration-break:clone` para que un
+  nombre que ocupe dos líneas quede tachado en las dos; con `inline-block` o un `::after` absoluto
+  habría salido una sola raya a media altura del bloque.
+- **Decisión (v1.13.0):** desmarcar ahora **borra** la clave de `S.checks` en vez de guardar `false`.
+  El calendario de asistencia ya filtraba por valor verdadero, así que no cambia nada de la lógica,
+  pero deja de acumular basura en el respaldo exportado.
+- **Pendiente conocido (v1.13.0):** guardar o eliminar un registro de peso desde la hoja sí sigue
+  llamando a `renderHoy()`. Ahí cambia también el contenido del botón de la fila, y el re-render
+  ocurre mientras la hoja se cierra, así que no se percibe como salto. Si molesta, hay que reconstruir
+  el botón `.ex-log` en sitio.
 - **Versión:** 1.12.0 — **tarjeta de Medidas plegable**.
 - v1.12.0 (medidas plegables): la tarjeta de Medidas corporales llegaba a ~900 px y dominaba Progreso.
   Ahora arranca **cerrada**: solo el título, un resumen de una línea (`measureSummary()`) y el chevron.
