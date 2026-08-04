@@ -13,7 +13,26 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
-- **Versión:** 1.11.0 — **medidas con diagrama corporal tocable** + calendario de asistencia compacto.
+- **Versión:** 1.12.0 — **tarjeta de Medidas plegable**.
+- v1.12.0 (medidas plegables): la tarjeta de Medidas corporales llegaba a ~900 px y dominaba Progreso.
+  Ahora arranca **cerrada**: solo el título, un resumen de una línea (`measureSummary()`) y el chevron.
+  Al tocar la cabecera se despliega **todo** de una vez: diagrama, las 9 tarjetas de zona, la nota de
+  próxima toma y los botones Historial/Todas, que bajaron de la cabecera al pie del contenido.
+  Caché SW → `stickfit-v10`.
+- **Decisión (v1.12.0):** el resumen de la cabecera cerrada **carga el aviso**: en ámbar cuando toca
+  medirse ("Toca medirte · última 02 ago") o cuando no hay ninguna toma; en gris el estado normal
+  ("Última: 02 ago · 6 de 9 zonas"). Sin esto, plegar la tarjeta habría escondido el recordatorio,
+  que es justo lo que dispara el ciclo de medición.
+- **Decisión (v1.12.0):** el despliegue se anima con `grid-template-rows: 0fr → 1fr` (clase `.fold-body`)
+  en vez de un `max-height` con un número inventado: así llega a la altura real del contenido, que
+  cambia según cuántas zonas haya registradas. El toggle se aplica **sobre el DOM ya pintado**
+  (`classList.toggle`), no re-renderizando: si la clase llegara puesta desde el render, el navegador
+  no tendría estado previo desde el cual animar y el despliegue sería un salto.
+- **Decisión (v1.12.0):** `mzOpen` vive en memoria, no en `localStorage` — es preferencia de vista, no
+  dato del usuario, y arrancar siempre plegado es el comportamiento predecible. Única excepción: el
+  aviso de **Hoy** pone `mzOpen=true` antes de navegar, para que la tarjeta reciba abierta a quien
+  llega desde el recordatorio.
+- v1.11.0 — **medidas con diagrama corporal tocable** + calendario de asistencia compacto.
 - v1.11.0 (medidas): las medidas pasan de 4 zonas genéricas a **9**: hombro, pecho, bíceps izq/der,
   cintura, muslo izq/der y pantorrilla izq/der. La tarjeta de Medidas muestra un **diagrama frontal
   tocable** (`bodyMeasureSVG`): la zona ya registrada se pinta en verde tenue y al tocarla se alumbra
@@ -164,7 +183,8 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 - **Progreso:** asistencia del mes (cuadritos mudos de 13 px con flechas ‹ ›, racha, % de cumplimiento)
   + peso corporal (meta con ritmo, barra inicio→meta, sparkline, "esperado hoy" vs real,
   **historial** con corrección y borrado)
-  + medidas corporales (**diagrama tocable de 9 zonas** + recordatorio de próxima toma e **historial**) + fuerza por ejercicio (sparkline,
+  + medidas corporales (**tarjeta plegable**: cerrada muestra solo el resumen; abierta, diagrama
+  tocable de 9 zonas + recordatorio de próxima toma + Historial/Todas) + fuerza por ejercicio (sparkline,
   1RM Epley, próximo objetivo) + volumen semanal por grupo muscular (series/grupo de la rutina activa,
   banda 10-20) + respaldo Exportar/Importar. Datos: `weightLog[]`, `weightGoal`, `measures[]`.
 - **Hoy:** selector de semana, checklist del día activo, barra de progreso y, **por ejercicio**, su

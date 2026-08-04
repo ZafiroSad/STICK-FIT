@@ -264,6 +264,18 @@ nav.dock{
 .mz-note.due{background:rgba(251,191,36,.09);border-color:rgba(251,191,36,.32)}
 .mz-note.ok{background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.25)}
 .mz-note b{color:var(--zinc-100)}
+/* ── Tarjeta plegable ── */
+.fold-head{display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.fold-head .fold-x{flex:none;color:var(--zinc-500);display:flex;transition:transform .3s var(--ease)}
+.fold-head.open .fold-x{transform:rotate(90deg)}
+.fold-sum{font-size:11.5px;color:var(--zinc-500);margin-top:3px}
+.fold-sum b{color:var(--zinc-300)}
+.fold-sum.due,.fold-sum.due b{color:var(--amber)}
+/* 0fr → 1fr anima hasta la altura real del contenido, sin fijar una altura en píxeles */
+.fold-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s var(--ease)}
+.fold-body.open{grid-template-rows:1fr}
+.fold-body>div{overflow:hidden;min-height:0}
+.fold-body:not(.open)>div{pointer-events:none}
 .notice{display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:16px;margin-top:14px;cursor:pointer;
   background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.32);transition:.2s var(--ease)}
 .notice:active{transform:scale(.99)}
@@ -869,7 +881,7 @@ function measureReminderBanner(){
     <span style="flex:none;color:var(--zinc-500)">${IC.chevron}</span></div>`;
 }
 function bindHoy(){
-  const mn=$("#measNotice");if(mn)mn.onclick=()=>go("progreso");
+  const mn=$("#measNotice");if(mn)mn.onclick=()=>{mzOpen=true;go("progreso");}; // el aviso lleva a la tarjeta ya abierta
   $("#v-hoy").querySelectorAll(".daypill").forEach(p=>p.onclick=()=>{selectedDay=p.dataset.day;renderHoy();});
   $("#v-hoy").querySelectorAll("[data-check]").forEach(c=>c.onclick=e=>{
     e.stopPropagation();const i=+c.dataset.check;const k=checkKey(selectedDay,i);
@@ -1512,6 +1524,10 @@ function bindProgreso(){
   const cn=$("#calNext");if(cn&&!cn.disabled)cn.onclick=()=>shiftMonth(1);
   $("#v-progreso").querySelectorAll("[data-cal]").forEach(c=>c.onclick=()=>toast(c.dataset.cal));
   $("#v-progreso").querySelectorAll("[data-mz]").forEach(z=>z.onclick=()=>openMeasureZone(z.dataset.mz));
+  /* Plegar/desplegar se hace sobre el DOM ya pintado, no re-renderizando: si la clase
+     "open" llegara puesta desde el render, el navegador no tendría de dónde animar. */
+  const mf=$("#mzFold"),mb=$("#mzBody");
+  if(mf&&mb)mf.onclick=()=>{mzOpen=!mzOpen;mf.classList.toggle("open",mzOpen);mb.classList.toggle("open",mzOpen);};
   const lw=$("#logWeight");if(lw)lw.onclick=openWeightSheet;
   const eg=$("#editGoal");if(eg)eg.onclick=openGoalSheet;
   const lm=$("#logMeasure");if(lm)lm.onclick=openMeasureSheet;
@@ -1585,6 +1601,7 @@ const MZ_TIP={
 /* Zonas donde crecer es bueno; en la cintura es al revés (por eso el color se invierte) */
 const MZ_LOWER_IS_BETTER={cintura:true};
 let selMZ=null; // zona resaltada en el diagrama
+let mzOpen=false; // la tarjeta de medidas arranca plegada; se abre al tocar la cabecera
 function measureSeries(k){
   return (S.measures||[]).filter(l=>l[k]!=null).sort((a,b)=>a.date<b.date?-1:1);
 }
@@ -1615,18 +1632,28 @@ function bodyMeasureSVG(vals,sel,cls){
     ${hit('pantorrilla_der',28,98,12,26)}${hit('pantorrilla_izq',40,98,12,26)}
   </svg>`;
 }
+/* Resumen de una línea para la cabecera plegada: lo único que se ve con la tarjeta cerrada,
+   así que carga el aviso de "toca medirte" en ámbar cuando corresponde. */
+function measureSummary(n){
+  const st=measureStatus();
+  if(st.state==="first")return {due:true,txt:"Sin medidas todavía · toma las de partida"};
+  if(st.state==="due")return {due:true,txt:`Toca medirte · última <b>${fechaCorta(st.last)}</b>`};
+  return {due:false,txt:`Última: <b>${fechaCorta(st.last)}</b> · ${n} de ${MEASURES.length} zonas`};
+}
 function measuresBlock(){
   const logs=(S.measures||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
   const last={};
   MEASURES.forEach(([k])=>{const s=measureSeries(k);if(s.length)last[k]=s[s.length-1][k];});
+  const sum=measureSummary(Object.keys(last).length);
   let h=`<div class="card section-gap" style="padding:18px">
-    <div class="card-head">
-      <div class="h3">Medidas corporales</div>
-      <div class="acts">
-        ${logs.length?`<button class="btn-secondary" id="histMeasure" style="padding:8px 13px">Historial</button>`:``}
-        <button class="btn-secondary" id="logMeasure" style="padding:8px 13px">Todas</button>
+    <div class="fold-head${mzOpen?" open":""}" id="mzFold">
+      <div style="flex:1;min-width:0">
+        <div class="h3">Medidas corporales</div>
+        <div class="fold-sum${sum.due?" due":""}">${sum.txt}</div>
       </div>
+      <span class="fold-x">${IC.chevron}</span>
     </div>
+    <div class="fold-body${mzOpen?" open":""}" id="mzBody"><div>
     <div class="bmap-wrap">${bodyMeasureSVG(last,selMZ)}</div>
     <p class="muted" style="text-align:center;margin:0 0 4px;font-size:11px">Toca un músculo para registrar · cambio vs. primera toma</p>
     <div class="mz-grid">`;
@@ -1645,7 +1672,12 @@ function measuresBlock(){
       <span class="mzd" style="color:${col}">${v==null?"sin registro":d===null?"primera toma":`${d>0?"+":""}${d} cm`}</span>
     </div>`;
   });
-  h+=`</div>${measureNote()}</div>`;
+  h+=`</div>${measureNote()}
+    <div style="display:flex;gap:8px;margin-top:12px">
+      ${logs.length?`<button class="btn-secondary" id="histMeasure" style="flex:1;padding:9px 13px">Historial</button>`:``}
+      <button class="btn-secondary" id="logMeasure" style="flex:1;padding:9px 13px">Todas</button>
+    </div>
+    </div></div></div>`;
   return h;
 }
 /* ---------- Cuándo volver a medirse (se deriva de la meta, no guarda nada) ----------
