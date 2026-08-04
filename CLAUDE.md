@@ -13,6 +13,32 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
+- **Versión:** 1.11.0 — **medidas con diagrama corporal tocable** + calendario de asistencia compacto.
+- v1.11.0 (medidas): las medidas pasan de 4 zonas genéricas a **9**: hombro, pecho, bíceps izq/der,
+  cintura, muslo izq/der y pantorrilla izq/der. La tarjeta de Medidas muestra un **diagrama frontal
+  tocable** (`bodyMeasureSVG`): la zona ya registrada se pinta en verde tenue y al tocarla se alumbra
+  y abre la hoja de **esa** medida (consejo de cómo medirla, última toma con fecha, campo en cm,
+  botón Quitar si ya hay dato de hoy). Debajo, 9 tarjetas con el valor y el cambio vs. la primera
+  toma. Se conserva "Todas" (toma completa de las 9 zonas) e "Historial". Caché SW → `stickfit-v9`.
+- v1.11.0 (recordatorio): la app dice **cuándo volver a medirse** según el ritmo de la meta de peso
+  (`MEASURE_EVERY`): ±0.5 kg/sem → cada 2 semanas · ±0.25 → 3 semanas · mantener → 4 semanas · sin
+  meta → 21 días. La nota en Progreso muestra la próxima fecha y el motivo; cuando ya toca (o si
+  nunca se han tomado) aparece además un aviso ámbar en **Hoy** que lleva a Progreso.
+- v1.11.0 (asistencia): los cuadritos del mes bajan a **13 px y pierden el número**, se quita la
+  cabecera L-M-M-J-V-S-D y la leyenda se compacta; las flechas ‹ › quedan en la misma línea del mes.
+  El detalle del día ahora sale al **tocar** el cuadrito (toast) o al pasar el cursor (`title`).
+- **Decisión (v1.11.0):** las zonas pares se guardan **por lado** (`biceps_izq`/`biceps_der`, etc.),
+  no promediadas: la asimetría entre brazos o piernas es justo lo que hay que vigilar y un promedio
+  la escondería. Migración one-shot con la bandera `measureSchema:2` — `brazo` → `biceps_der` y
+  `muslo` → `muslo_der` (una medida vieja se tomó de un solo lado; asumir el dominante pierde menos
+  información que duplicarla a los dos).
+- **Decisión (v1.11.0):** el diagrama es la **vista frontal de la persona**, así que su lado izquierdo
+  se dibuja a la derecha de la pantalla (como al mirarla de frente). Los `<rect class="mzhit">`
+  transparentes al final del SVG agrandan el área de toque: los músculos dibujados miden pocos
+  píxeles en un celular.
+- **Decisión (v1.11.0):** el recordatorio **no guarda nada nuevo**; se deriva de la fecha del último
+  registro de `measures[]` y del `rate` de `weightGoal`. Misma razón que la asistencia: un estado
+  aparte se desincronizaría al corregir o borrar un registro.
 - **Versión:** 1.10.0 — **asistencia mensual** (calendario de cuadritos en Progreso).
 - v1.10.0 (asistencia): primer bloque de **Progreso**. Calendario del mes con un cuadrito por día
   (semana de lunes a domingo), navegación ‹ › entre meses (el botón "siguiente" se deshabilita en el
@@ -135,10 +161,10 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 ## Estructura funcional
 - **Portada** → botón "Entrenar hoy" (flag `onboarded`).
 - **Dock (5 vistas):** Hoy · Progreso · Rutinas · Ejercicios · Nutrición.
-- **Progreso:** asistencia del mes (calendario de cuadritos, racha, % de cumplimiento)
+- **Progreso:** asistencia del mes (cuadritos mudos de 13 px con flechas ‹ ›, racha, % de cumplimiento)
   + peso corporal (meta con ritmo, barra inicio→meta, sparkline, "esperado hoy" vs real,
   **historial** con corrección y borrado)
-  + medidas corporales (cintura/pecho/brazo/muslo con tendencia e **historial**) + fuerza por ejercicio (sparkline,
+  + medidas corporales (**diagrama tocable de 9 zonas** + recordatorio de próxima toma e **historial**) + fuerza por ejercicio (sparkline,
   1RM Epley, próximo objetivo) + volumen semanal por grupo muscular (series/grupo de la rutina activa,
   banda 10-20) + respaldo Exportar/Importar. Datos: `weightLog[]`, `weightGoal`, `measures[]`.
 - **Hoy:** selector de semana, checklist del día activo, barra de progreso y, **por ejercicio**, su
@@ -164,6 +190,9 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
   se usan solo para la progresión. Una entrada por ejercicio y día: volver a guardar la edita.
 - `liftUnit`: bandera de la migración kg→lb del historial de fuerza. El peso corporal (`weightLog`,
   `weightGoal`) y la nutrición siguen en kg; las medidas en cm.
+- `measures[]`: un registro por día `{date, hombro, pecho, biceps_izq, biceps_der, cintura,
+  muslo_izq, muslo_der, pantorrilla_izq, pantorrilla_der}` en **cm**; cada zona es opcional.
+  `measureSchema`: bandera de la migración de las 4 zonas viejas a las 9 por lado.
 
 ## Decisiones tomadas (no re-litigar sin discusión)
 1. Un solo HTML + localStorage (no React/Vite) — elegido por portabilidad.

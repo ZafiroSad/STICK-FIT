@@ -220,23 +220,53 @@ nav.dock{
 .ex-log.logged{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.30);color:var(--emerald)}
 .ex-log.logged .elk{color:rgba(52,211,153,.75)}
 
-/* ── Calendario de asistencia ── */
-.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.calhead{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--zinc-600);text-align:center;padding-bottom:2px}
-.calcell{aspect-ratio:1;border-radius:9px;display:grid;place-items:center;
-  font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;
-  background:rgba(24,24,27,.5);border:1px solid rgba(63,63,70,.3);color:var(--zinc-600)}
-.calcell.blank{background:transparent;border-color:transparent}
-.calcell.rest{background:rgba(24,24,27,.35);border-color:rgba(63,63,70,.2);color:var(--zinc-700)}
-.calcell.miss{background:rgba(24,24,27,.6);border-color:rgba(251,113,133,.22);color:var(--zinc-550)}
-.calcell.part{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35);color:var(--emerald)}
-.calcell.full{background:var(--emerald);border-color:var(--emerald);color:#04120c}
-.calcell.fut{opacity:.45}
+/* ── Calendario de asistencia (cuadritos mudos: sin número de día) ── */
+.calgrid{display:grid;grid-template-columns:repeat(7,13px);gap:5px;width:max-content}
+.calcell{width:13px;height:13px;border-radius:4px;font-size:0;line-height:0;cursor:pointer;
+  background:rgba(24,24,27,.5);border:1px solid rgba(63,63,70,.3);transition:transform .15s var(--ease)}
+.calcell:active{transform:scale(.85)}
+.calcell.blank{background:transparent;border-color:transparent;pointer-events:none}
+.calcell.rest{background:rgba(24,24,27,.35);border-color:rgba(63,63,70,.2)}
+.calcell.miss{background:rgba(24,24,27,.6);border-color:rgba(251,113,133,.28)}
+.calcell.part{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35)}
+.calcell.full{background:var(--emerald);border-color:var(--emerald)}
+.calcell.fut{opacity:.4}
 .calcell.today{box-shadow:0 0 0 2px rgba(255,255,255,.55)}
-.callegend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
-.callegend span{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--zinc-500)}
-.callegend i{width:11px;height:11px;border-radius:4px;display:inline-block;border:1px solid transparent}
+.callegend{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:12px}
+.callegend span{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--zinc-500)}
+.callegend i{width:9px;height:9px;border-radius:3px;display:inline-block;border:1px solid transparent}
+
+/* ── Mapa corporal de medidas ── */
+.bmap-wrap{display:flex;justify-content:center;padding:10px 0 4px}
+.bmap{width:150px;height:244px;display:block;overflow:visible}
+.bmap.bmap-sm{width:72px;height:117px}
+.bmap.bmap-sm .mzhit{pointer-events:none}
+.bmap.bmap-sm .mz{cursor:default}
+.bmap .base{fill:rgba(63,63,70,.20);stroke:rgba(82,82,91,.30);stroke-width:.6}
+.bmap .mz{fill:rgba(82,82,91,.32);stroke:rgba(9,9,11,.55);stroke-width:.3;cursor:pointer;
+  transition:fill .25s var(--ease),filter .25s var(--ease)}
+.bmap .mz.has{fill:rgba(52,211,153,.34)}
+.bmap .mz.on{fill:var(--emerald);filter:drop-shadow(0 0 3px rgba(52,211,153,.65))}
+.bmap .mzhit{fill:transparent;cursor:pointer}
+.mz-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+.mztile{text-align:left;padding:8px 10px;border-radius:12px;cursor:pointer;
+  background:rgba(24,24,27,.45);border:1px solid rgba(63,63,70,.32);transition:.2s var(--ease)}
+.mztile:active{transform:scale(.985)}
+.mztile.has{border-color:rgba(52,211,153,.28)}
+.mztile.on{border-color:rgba(52,211,153,.7);background:rgba(52,211,153,.08)}
+.mztile .mzl{display:block;font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--zinc-500)}
+.mztile .mzv{display:block;font-size:16px;font-weight:800;margin-top:3px;color:var(--zinc-100)}
+.mztile.empty .mzv{color:var(--zinc-600)}
+.mztile .mzv small{font-size:10px;color:var(--zinc-500);font-weight:700}
+.mztile .mzd{display:block;font-size:10px;font-weight:700;margin-top:1px}
+.mz-note{display:flex;align-items:flex-start;gap:9px;padding:11px 13px;border-radius:14px;margin-top:12px;
+  background:rgba(24,24,27,.45);border:1px solid rgba(63,63,70,.32)}
+.mz-note.due{background:rgba(251,191,36,.09);border-color:rgba(251,191,36,.32)}
+.mz-note.ok{background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.25)}
+.mz-note b{color:var(--zinc-100)}
+.notice{display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:16px;margin-top:14px;cursor:pointer;
+  background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.32);transition:.2s var(--ease)}
+.notice:active{transform:scale(.99)}
 
 /* ── Barra de progreso ── */
 .bar{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
@@ -655,11 +685,21 @@ function load(){
         raw.liftUnit="lb";
         localStorage.setItem(KEY,JSON.stringify(raw));
       }
+      // migración: las medidas pasan de 4 zonas genéricas a 9 por lado (brazo→bíceps der., muslo→muslo der.)
+      if(raw.measureSchema!==2){
+        (raw.measures||[]).forEach(l=>{
+          if(l.brazo!=null&&l.biceps_der==null){l.biceps_der=l.brazo;}
+          if(l.muslo!=null&&l.muslo_der==null){l.muslo_der=l.muslo;}
+          delete l.brazo;delete l.muslo;
+        });
+        raw.measureSchema=2;
+        localStorage.setItem(KEY,JSON.stringify(raw));
+      }
       return raw;
     }
   }catch(e){}
   return {onboarded:false,seedVersion:SEED_VERSION,activeRoutineId:SEED_ROUTINE.id,routines:[structuredClone(SEED_ROUTINE)],
-    customEx:[],imgUrls:{},checks:{},history:[],profile:null,weightLog:[],weightGoal:null,measures:[],liftUnit:"lb"};
+    customEx:[],imgUrls:{},checks:{},history:[],profile:null,weightLog:[],weightGoal:null,measures:[],liftUnit:"lb",measureSchema:2};
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(S));}
 function allEx(){return [...SEED_EX,...(S.customEx||[])];}
@@ -769,6 +809,7 @@ function renderHoy(){
     return `<div class="daypill${id===selectedDay?" on":""}${dd.rest?" rest":""}${pct===100?" complete":""}" data-day="${id}">
       <span class="dot"></span><div class="dw">${lbl}</div><div class="df">${dd.rest?"Rest":dd.focus.replace(/ [AB]$/,"")}</div></div>`;
   }).join("")+`</div>`;
+  h+=measureReminderBanner();
 
   if(day.rest){
     h+=`<div class="card" style="padding:26px;text-align:center;margin-top:18px">
@@ -813,7 +854,22 @@ function renderHoy(){
   </div></div>`;
   $("#v-hoy").innerHTML=h;bindHoy();
 }
+/* Aviso de medidas en Hoy: solo aparece cuando ya toca según la meta (o si nunca se han tomado).
+   Es el "recuerda" del ciclo de medidas; el detalle vive en Progreso. */
+function measureReminderBanner(){
+  const st=measureStatus();
+  if(st.state==="ok")return "";
+  const first=st.state==="first";
+  return `<div class="notice" id="measNotice">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M12 13v3.5"/></svg>
+    <div style="flex:1;min-width:0">
+      <div class="h3" style="font-size:13px">${first?"Toma tus medidas de partida":"Toca tomar medidas"}</div>
+      <div class="sub" style="font-size:11px;margin-top:2px">${first?"Hombro, pecho, bíceps, cintura, muslos y pantorrillas":`La última fue hace ${st.passed} ${st.passed===1?"día":"días"}`}</div>
+    </div>
+    <span style="flex:none;color:var(--zinc-500)">${IC.chevron}</span></div>`;
+}
 function bindHoy(){
+  const mn=$("#measNotice");if(mn)mn.onclick=()=>go("progreso");
   $("#v-hoy").querySelectorAll(".daypill").forEach(p=>p.onclick=()=>{selectedDay=p.dataset.day;renderHoy();});
   $("#v-hoy").querySelectorAll("[data-check]").forEach(c=>c.onclick=e=>{
     e.stopPropagation();const i=+c.dataset.check;const k=checkKey(selectedDay,i);
@@ -1314,25 +1370,26 @@ function attendanceBlock(){
     let cls=st.trained?(st.full?"full":"part"):(st.rest?"rest":(future?"":"miss"));
     if(future)cls+=" fut";
     if(iso===todayIso)cls+=" today";
-    cells+=`<div class="calcell ${cls}" title="${fechaLarga(iso)}${st.rest?" · descanso":st.trained?` · ${st.done}/${st.total} ejercicios`:" · sin registro"}">${d}</div>`;
+    // el cuadrito no lleva número: el detalle del día sale al tocarlo (toast) o al pasar el cursor (title)
+    const info=`${fechaLarga(iso)}${st.rest?" · descanso":st.trained?` · ${st.done}/${st.total} ejercicios`:future?" · pendiente":" · sin registro"}`;
+    cells+=`<div class="calcell ${cls}" data-cal="${info}" title="${info}"></div>`;
   }
   const pct=programados?Math.round(hechos/programados*100):0;
   const racha=currentStreak();
   let h=`<div class="card" style="padding:18px">
-    <div class="card-head">
-      <div><div class="h3">${MESES_LARGO[m]} ${y}</div>
-        <div class="sub" style="margin-top:2px">${hechos} ${hechos===1?"sesión":"sesiones"}${programados?` · ${pct}% de los días programados`:""}</div></div>
-      <div class="acts">
-        <button class="icon-btn" id="calPrev" title="Mes anterior"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-        <button class="icon-btn" id="calNext" title="Mes siguiente" ${isCur?"disabled style=\"opacity:.35\"":""}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div style="flex:1;min-width:0">
+        <div class="h3">${MESES_LARGO[m]} ${y}</div>
+        <div class="sub" style="margin-top:2px">${hechos} ${hechos===1?"sesión":"sesiones"}${programados?` · ${pct}% cumplido`:""}</div>
       </div>
+      <button class="icon-btn" id="calPrev" title="Mes anterior" style="flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button class="icon-btn" id="calNext" title="Mes siguiente" style="flex:none${isCur?";opacity:.35":""}" ${isCur?"disabled":""}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
     </div>
-    <div class="calgrid" style="margin-bottom:6px">${["L","M","M","J","V","S","D"].map(x=>`<div class="calhead">${x}</div>`).join("")}</div>
     <div class="calgrid">${cells}</div>
     <div class="callegend">
-      <span><i style="background:var(--emerald)"></i>Día completo</span>
-      <span><i style="background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35)"></i>Entrenaste a medias</span>
-      <span><i style="background:rgba(24,24,27,.6);border-color:rgba(251,113,133,.22)"></i>Tocaba y no fuiste</span>
+      <span><i style="background:var(--emerald)"></i>Completo</span>
+      <span><i style="background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35)"></i>A medias</span>
+      <span><i style="background:rgba(24,24,27,.6);border-color:rgba(251,113,133,.28)"></i>No fuiste</span>
       <span><i style="background:rgba(24,24,27,.35);border-color:rgba(63,63,70,.25)"></i>Descanso</span>
     </div>`;
   h+=`<div style="display:flex;gap:10px;margin-top:14px">
@@ -1341,7 +1398,7 @@ function attendanceBlock(){
     <div class="stat" style="flex:1;padding:12px 14px"><div class="label">Este mes</div>
       <div class="mono" style="font-size:20px;font-weight:800">${hechos}<small style="font-size:11px;color:var(--zinc-500);font-weight:700">${programados?" / "+programados:""}</small></div></div>
   </div>`;
-  h+=`<p class="muted" style="margin-top:12px;font-size:11px">Se marca solo: un día cuenta como entrenado en cuanto marcas un ejercicio o registras un peso.</p></div>`;
+  h+=`<p class="muted" style="margin-top:12px;font-size:11px">Se marca solo: un día cuenta como entrenado en cuanto marcas un ejercicio o registras un peso. Toca un cuadrito para ver el día.</p></div>`;
   return h;
 }
 
@@ -1453,6 +1510,8 @@ function bindProgreso(){
   };
   const cp=$("#calPrev");if(cp)cp.onclick=()=>shiftMonth(-1);
   const cn=$("#calNext");if(cn&&!cn.disabled)cn.onclick=()=>shiftMonth(1);
+  $("#v-progreso").querySelectorAll("[data-cal]").forEach(c=>c.onclick=()=>toast(c.dataset.cal));
+  $("#v-progreso").querySelectorAll("[data-mz]").forEach(z=>z.onclick=()=>openMeasureZone(z.dataset.mz));
   const lw=$("#logWeight");if(lw)lw.onclick=openWeightSheet;
   const eg=$("#editGoal");if(eg)eg.onclick=openGoalSheet;
   const lm=$("#logMeasure");if(lm)lm.onclick=openMeasureSheet;
@@ -1496,51 +1555,193 @@ function openGoalSheet(){
   };
 }
 
-/* ---------- Medidas corporales ---------- */
-const MEASURES=[["cintura","Cintura"],["pecho","Pecho"],["brazo","Brazo"],["muslo","Muslo"]];
+/* ---------- Medidas corporales ----------
+   9 zonas, las pares por lado: la asimetría entre brazos o piernas es justo
+   lo que hay que vigilar y un promedio la escondería. Todo en cm.
+   Convención del diagrama: es la vista frontal de la persona, así que su lado
+   IZQUIERDO aparece a la derecha de la pantalla (como al mirarla de frente). */
+const MEASURES=[
+  ["hombro","Hombro"],
+  ["pecho","Pecho"],
+  ["biceps_izq","Bíceps izq."],
+  ["biceps_der","Bíceps der."],
+  ["cintura","Cintura"],
+  ["muslo_izq","Muslo izq."],
+  ["muslo_der","Muslo der."],
+  ["pantorrilla_izq","Pantorrilla izq."],
+  ["pantorrilla_der","Pantorrilla der."],
+];
+const MZ_TIP={
+  hombro:"Contorno por la parte más ancha de los deltoides, de pie y con los brazos relajados a los lados.",
+  pecho:"A la altura de los pezones, al final de una exhalación normal. No infles el pecho.",
+  biceps_izq:"Brazo flexionado y contraído, en el punto más grueso.",
+  biceps_der:"Brazo flexionado y contraído, en el punto más grueso.",
+  cintura:"A la altura del ombligo, de pie y relajado. No metas el abdomen.",
+  muslo_izq:"De pie, a 15 cm por encima de la rótula, con el peso repartido en las dos piernas.",
+  muslo_der:"De pie, a 15 cm por encima de la rótula, con el peso repartido en las dos piernas.",
+  pantorrilla_izq:"De pie, en el punto más grueso de la pantorrilla.",
+  pantorrilla_der:"De pie, en el punto más grueso de la pantorrilla.",
+};
+/* Zonas donde crecer es bueno; en la cintura es al revés (por eso el color se invierte) */
+const MZ_LOWER_IS_BETTER={cintura:true};
+let selMZ=null; // zona resaltada en el diagrama
+function measureSeries(k){
+  return (S.measures||[]).filter(l=>l[k]!=null).sort((a,b)=>a.date<b.date?-1:1);
+}
+/* Diagrama tocable. `vals` decide qué zonas salen ya registradas, `sel` cuál se alumbra.
+   Los <rect class="mzhit"> son transparentes y van al final: agrandan el área de toque
+   (los músculos dibujados son de pocos píxeles en un celular). */
+function bodyMeasureSVG(vals,sel,cls){
+  const c=k=>`mz${vals&&vals[k]!=null?" has":""}${sel===k?" on":""}`;
+  const hit=(k,x,y,w,hh)=>`<rect class="mzhit" data-mz="${k}" x="${x}" y="${y}" width="${w}" height="${hh}"/>`;
+  return `<svg class="bmap${cls?" "+cls:""}" viewBox="0 0 80 130">${bodyBase()}
+    <g class="${c('hombro')}" data-mz="hombro">
+      <ellipse cx="24.5" cy="29.5" rx="4.3" ry="4.4"/><ellipse cx="55.5" cy="29.5" rx="4.3" ry="4.4"/>
+      <rect x="29" y="26" width="22" height="3.6" rx="1.8"/></g>
+    <g class="${c('pecho')}" data-mz="pecho" transform="translate(0,2)">
+      <path d="M39.2 29 H32.9 Q32 33 32.7 36.2 Q36.4 38 39.2 35.4 Z"/>
+      <path d="M40.8 29 H47.1 Q48 33 47.3 36.2 Q43.6 38 40.8 35.4 Z"/></g>
+    <ellipse class="${c('biceps_der')}" data-mz="biceps_der" cx="23.3" cy="42" rx="3" ry="5"/>
+    <ellipse class="${c('biceps_izq')}" data-mz="biceps_izq" cx="56.7" cy="42" rx="3" ry="5"/>
+    <rect class="${c('cintura')}" data-mz="cintura" x="33.7" y="49.5" width="12.6" height="6.4" rx="3.2"/>
+    <rect class="${c('muslo_der')}" data-mz="muslo_der" x="34" y="67" width="5.4" height="26" rx="2.7"/>
+    <rect class="${c('muslo_izq')}" data-mz="muslo_izq" x="40.6" y="67" width="5.4" height="26" rx="2.7"/>
+    <rect class="${c('pantorrilla_der')}" data-mz="pantorrilla_der" x="34.3" y="102" width="4.8" height="17" rx="2.4"/>
+    <rect class="${c('pantorrilla_izq')}" data-mz="pantorrilla_izq" x="40.9" y="102" width="4.8" height="17" rx="2.4"/>
+    ${hit('hombro',17,21,46,8)}${hit('pecho',30,29,20,11)}
+    ${hit('biceps_der',16,35,14,14)}${hit('biceps_izq',50,35,14,14)}
+    ${hit('cintura',31,45,18,15)}
+    ${hit('muslo_der',28,62,12,35)}${hit('muslo_izq',40,62,12,35)}
+    ${hit('pantorrilla_der',28,98,12,26)}${hit('pantorrilla_izq',40,98,12,26)}
+  </svg>`;
+}
 function measuresBlock(){
   const logs=(S.measures||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+  const last={};
+  MEASURES.forEach(([k])=>{const s=measureSeries(k);if(s.length)last[k]=s[s.length-1][k];});
   let h=`<div class="card section-gap" style="padding:18px">
     <div class="card-head">
       <div class="h3">Medidas corporales</div>
       <div class="acts">
         ${logs.length?`<button class="btn-secondary" id="histMeasure" style="padding:8px 13px">Historial</button>`:``}
-        <button class="btn-secondary" id="logMeasure" style="padding:8px 13px">Registrar</button>
+        <button class="btn-secondary" id="logMeasure" style="padding:8px 13px">Todas</button>
       </div>
-    </div>`;
-  const hasAny=logs.some(l=>MEASURES.some(([k])=>l[k]!=null));
-  if(!hasAny){
-    h+=`<div class="empty" style="padding:12px 8px"><p class="sub">Registra cintura, pecho, brazo y muslo (cm) para ver la recomposición, no solo el peso.</p></div></div>`;
-    return h;
-  }
-  h+=`<div>`;
+    </div>
+    <div class="bmap-wrap">${bodyMeasureSVG(last,selMZ)}</div>
+    <p class="muted" style="text-align:center;margin:0 0 4px;font-size:11px">Toca un músculo para registrar · cambio vs. primera toma</p>
+    <div class="mz-grid">`;
   MEASURES.forEach(([k,label])=>{
-    const series=logs.filter(l=>l[k]!=null);
-    if(!series.length)return;
-    const first=series[0][k],last=series[series.length-1][k];
-    const delta=+(last-first).toFixed(1);
-    h+=`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid rgba(63,63,70,.25)">
-      <div style="flex:1;min-width:0"><div class="h3" style="font-size:14px">${label}</div>
-        ${series.length>=2?`<div class="mono" style="font-size:11px;color:${delta<0?'var(--emerald)':delta>0?'var(--sky)':'var(--zinc-500)'}">${delta>0?'+':''}${delta} cm desde el inicio</div>`:`<div class="dim" style="font-size:11px">primer registro</div>`}</div>
-      <div style="width:110px">${series.length>=2?sparkline(series.map(s=>s[k]),"#a1a1aa"):'<span class="muted" style="font-size:11px">1 registro</span>'}</div>
-      <div class="mono" style="font-weight:800;font-size:16px;min-width:54px;text-align:right">${last}<small style="color:var(--zinc-500);font-size:11px"> cm</small></div>
+    const s=measureSeries(k);
+    const v=s.length?s[s.length-1][k]:null;
+    const d=s.length>=2?+(v-s[0][k]).toFixed(1):null;
+    let col="var(--zinc-600)";
+    if(d!==null){
+      const bien=MZ_LOWER_IS_BETTER[k]?d<0:d>0;
+      col=d===0?"var(--zinc-500)":bien?"var(--emerald)":"var(--sky)";
+    }
+    h+=`<div class="mztile${v==null?" empty":" has"}${selMZ===k?" on":""}" data-mz="${k}">
+      <span class="mzl">${label}</span>
+      <span class="mzv mono">${v==null?"—":v+'<small> cm</small>'}</span>
+      <span class="mzd" style="color:${col}">${v==null?"sin registro":d===null?"primera toma":`${d>0?"+":""}${d} cm`}</span>
     </div>`;
   });
-  h+=`</div></div>`;
+  h+=`</div>${measureNote()}</div>`;
   return h;
 }
+/* ---------- Cuándo volver a medirse (se deriva de la meta, no guarda nada) ----------
+   Cuanto más agresivo es el ritmo de la meta, antes cambian las medidas: con ±0.5 kg/sem
+   dos semanas ya dan diferencia medible; manteniendo peso hay que esperar un mes. */
+const MEASURE_EVERY={"0.5":14,"-0.5":14,"0.25":21,"-0.25":21,"0":28};
+const MEASURE_DEFAULT_DAYS=21;
+function isoToDate(iso){const p=String(iso).split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
+function diasEntre(a,b){return Math.round((isoToDate(b)-isoToDate(a))/864e5);}
+function addDaysIso(iso,n){const d=isoToDate(iso);d.setDate(d.getDate()+n);return isoOf(d);}
+function measurePlan(){
+  const g=S.weightGoal;
+  const rate=g&&g.rate!=null?String(g.rate):(S.profile?goalRateFromNutrition():null);
+  const days=(rate!=null&&MEASURE_EVERY[rate])||MEASURE_DEFAULT_DAYS;
+  return {days,rate,why:rate!=null?RATE_LABEL[rate]:null};
+}
+function measureStatus(){
+  const p=measurePlan();
+  const fechas=(S.measures||[]).map(l=>l.date).sort();
+  const last=fechas.length?fechas[fechas.length-1]:null;
+  if(!last)return Object.assign(p,{state:"first",last:null});
+  const passed=diasEntre(last,todayKey());
+  const left=p.days-passed;
+  return Object.assign(p,{state:left<=0?"due":"ok",last,passed,left,next:addDaysIso(last,p.days)});
+}
+function measureNote(){
+  const st=measureStatus();
+  const sem=st.days%7===0?`${st.days/7} ${st.days/7===1?"semana":"semanas"}`:`${st.days} días`;
+  const motivo=st.why?`Según tu meta (<b>${st.why}</b>) toca cada <b>${sem}</b>.`
+                     :`Sin meta de peso definida se usa el intervalo por defecto: cada <b>${sem}</b>.`;
+  let cls="",txt="";
+  if(st.state==="first"){txt=`<b>Aún no has tomado medidas.</b> Tómalas hoy para tener punto de partida. ${motivo}`;}
+  else if(st.state==="due"){cls=" due";txt=`<b>Toca medirte.</b> La última fue hace ${st.passed} ${st.passed===1?"día":"días"} (${fechaCorta(st.last)}). ${motivo}`;}
+  else{cls=" ok";txt=`Próxima toma: <b>${fechaCorta(st.next)}</b> · ${st.left===0?"hoy":`en ${st.left} ${st.left===1?"día":"días"}`}. ${motivo}`;}
+  const ico=st.state==="due"?"var(--amber)":st.state==="first"?"var(--zinc-500)":"var(--emerald)";
+  return `<div class="mz-note${cls}">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${ico}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M12 13v3.5"/></svg>
+    <p class="sub" style="margin:0;font-size:11.5px;line-height:1.5">${txt}</p></div>`;
+}
+/* Hoja de una sola zona: se abre al tocar el músculo en el diagrama */
+function openMeasureZone(k){
+  const label=(MEASURES.find(m=>m[0]===k)||[k,k])[1];
+  const s=measureSeries(k);
+  const prev=s.length?s[s.length-1]:null;
+  const date=todayKey();
+  const hoy=(S.measures||[]).find(l=>l.date===date);
+  const cur=hoy&&hoy[k]!=null?hoy[k]:null;
+  selMZ=k;renderProgreso();
+  sheet2Hook=()=>{selMZ=null;renderProgreso();};
+  openSheet2(`<div class="sheet-grab"></div>
+    <div class="sheet-head"><div class="h2">${label}</div><button class="close-x" data-close>×</button></div>
+    <div style="display:flex;gap:14px;align-items:center;margin:2px 0 14px">
+      <div style="flex:none">${bodyMeasureSVG({},k,"bmap-sm")}</div>
+      <div style="flex:1;min-width:0">
+        <p class="muted" style="margin:0 0 9px">${MZ_TIP[k]||""}</p>
+        ${prev?`<div class="sub" style="font-size:12px">Última: <b class="mono" style="color:var(--zinc-100)">${prev[k]} cm</b> · ${fechaCorta(prev.date)}</div>`:`<div class="sub" style="font-size:12px">Sin registros de esta zona todavía.</div>`}
+      </div>
+    </div>
+    <div class="field"><label>Medida de hoy (cm)</label><input type="number" inputmode="decimal" id="mz-val" value="${cur!=null?cur:""}" placeholder="${prev?prev[k]:'cm'}"></div>
+    <div style="display:flex;gap:8px">
+      ${cur!=null?`<button class="btn-secondary" id="mz-del">Quitar</button>`:``}
+      <button class="btn-primary" style="flex:1" id="mz-save">Guardar</button>
+    </div>`);
+  const inp=$("#mz-val");
+  inp.focus();
+  inp.onkeydown=e=>{if(e.key==="Enter")$("#mz-save").click();};
+  $("#mz-save").onclick=()=>{
+    const v=parseFloat(inp.value);
+    if(!v)return toast("Ingresa la medida");
+    const entry=Object.assign({},(S.measures||[]).find(l=>l.date===date)||{},{date});
+    entry[k]=v;
+    S.measures=(S.measures||[]).filter(l=>l.date!==date);S.measures.push(entry);
+    save();closeSheet2();toast(label+" · "+v+" cm");
+  };
+  const del=$("#mz-del");
+  if(del)del.onclick=()=>{
+    const e=(S.measures||[]).find(l=>l.date===date);
+    if(e){delete e[k];if(!MEASURES.some(([kk])=>e[kk]!=null))S.measures=S.measures.filter(l=>l.date!==date);}
+    save();closeSheet2();toast("Medida quitada");
+  };
+}
+/* Hoja con las 9 zonas de una vez (para la toma completa) */
+function measureFields(pre,vals,phs){
+  let f="";
+  for(let i=0;i<MEASURES.length;i+=2){
+    f+=`<div class="row2">`+MEASURES.slice(i,i+2).map(([k,lb])=>
+      `<div class="field"><label>${lb}</label><input type="number" inputmode="decimal" id="${pre}${k}" value="${vals[k]!=null?vals[k]:""}" placeholder="${phs&&phs[k]!=null?phs[k]:'cm'}"></div>`).join("")+`</div>`;
+  }
+  return f;
+}
 function openMeasureSheet(){
-  const last=(S.measures||[]).slice(-1)[0]||{};
-  openSheet2(`<div class="sheet-grab"></div><div class="sheet-head"><div class="h2">Registrar medidas</div><button class="close-x" data-close>×</button></div>
+  const phs={};MEASURES.forEach(([k])=>{const s=measureSeries(k);if(s.length)phs[k]=s[s.length-1][k];});
+  const hoy=(S.measures||[]).find(l=>l.date===todayKey())||{};
+  openSheet2(`<div class="sheet-grab"></div><div class="sheet-head"><div class="h2">Toma completa</div><button class="close-x" data-close>×</button></div>
     <p class="muted" style="margin:6px 0 14px">En centímetros. Deja en blanco lo que no midas hoy.</p>
-    <div class="row2">
-      <div class="field"><label>Cintura</label><input type="number" inputmode="decimal" id="m-cintura" placeholder="${last.cintura||'cm'}"></div>
-      <div class="field"><label>Pecho</label><input type="number" inputmode="decimal" id="m-pecho" placeholder="${last.pecho||'cm'}"></div>
-    </div>
-    <div class="row2">
-      <div class="field"><label>Brazo</label><input type="number" inputmode="decimal" id="m-brazo" placeholder="${last.brazo||'cm'}"></div>
-      <div class="field"><label>Muslo</label><input type="number" inputmode="decimal" id="m-muslo" placeholder="${last.muslo||'cm'}"></div>
-    </div>
+    ${measureFields("m-",hoy,phs)}
     <button class="btn-primary" style="width:100%;margin-top:6px" id="m-save">Guardar</button>`);
   $("#m-save").onclick=()=>{
     const date=todayKey();
@@ -1652,14 +1853,7 @@ function editMeasureEntry(date){
   openSheet2(`<div class="sheet-grab"></div>
     <div class="sheet-head"><div class="h2">Corregir medidas</div><button class="close-x" data-close>×</button></div>
     <p class="muted" style="margin:2px 0 14px">${fechaLarga(date)} · deja en blanco para quitar una medida</p>
-    <div class="row2">
-      <div class="field"><label>Cintura</label><input type="number" inputmode="decimal" id="me-cintura" value="${e.cintura!=null?e.cintura:""}"></div>
-      <div class="field"><label>Pecho</label><input type="number" inputmode="decimal" id="me-pecho" value="${e.pecho!=null?e.pecho:""}"></div>
-    </div>
-    <div class="row2">
-      <div class="field"><label>Brazo</label><input type="number" inputmode="decimal" id="me-brazo" value="${e.brazo!=null?e.brazo:""}"></div>
-      <div class="field"><label>Muslo</label><input type="number" inputmode="decimal" id="me-muslo" value="${e.muslo!=null?e.muslo:""}"></div>
-    </div>
+    ${measureFields("me-",e,null)}
     <button class="btn-primary" style="width:100%;margin-top:6px" id="me-save">Guardar</button>`);
   $("#me-save").onclick=()=>{
     const entry={date};let any=false;
@@ -1796,7 +1990,11 @@ $("#overlay").onclick=e=>{if(e.target===$("#overlay"))closeSheet();};
 /* Segundo overlay apilado (para selectores abiertos desde otra hoja, ej. añadir ejercicio) */
 function openSheet2(html){$("#sheet2").innerHTML=html;$("#overlay2").classList.add("open");
   $("#sheet2").querySelectorAll("[data-close]").forEach(b=>b.onclick=closeSheet2);}
-function closeSheet2(){$("#overlay2").classList.remove("open");}
+/* Gancho de cierre de un solo uso: lo usa el diagrama de medidas para apagar el músculo
+   resaltado se cierre como se cierre la hoja (botón, scrim o guardado). */
+let sheet2Hook=null;
+function closeSheet2(){$("#overlay2").classList.remove("open");
+  if(sheet2Hook){const f=sheet2Hook;sheet2Hook=null;f();}}
 $("#overlay2").onclick=e=>{if(e.target===$("#overlay2"))closeSheet2();};
 
 /* Hojas reutilizables (reemplazan prompt()/confirm() nativos) */
