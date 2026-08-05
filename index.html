@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0c0d10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -33,13 +33,22 @@
   --ease:cubic-bezier(.16,1,.3,1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{background:var(--bg);font-family:var(--font);-webkit-text-size-adjust:100%}
+html{background:var(--bg);font-family:var(--font);-webkit-text-size-adjust:100%;text-size-adjust:100%;
+  /* Anti-zoom (regla global de la familia Stick): desactiva el doble-tap
+     para hacer zoom sin afectar el tap ni el scroll. */
+  touch-action:manipulation}
 body{
   background:var(--bg);color:var(--zinc-100);font-family:var(--font);
   -webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;
   background-image:radial-gradient(1200px 700px at 50% -10%,rgba(82,82,91,.06),transparent 60%);
 }
 button,input,select,textarea{font-family:inherit}
+/* Safari en iOS hace zoom automatico al enfocar un campo cuya fuente mida
+   menos de 16px: en pantallas tactiles se fuerzan a 16px. El escritorio
+   conserva los tamanos originales. */
+@media (pointer:coarse){
+  input,select,textarea,.field input,.field select,.field textarea{font-size:16px !important}
+}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--zinc-700);border-radius:99px}
@@ -2091,6 +2100,44 @@ $("#coverBtn").onclick=()=>{$("#cover").style.display="flex";$("#app").style.dis
 renderDock();
 if(S.onboarded){$("#cover").style.display="none";$("#app").style.display="block";go("hoy");}
 else{go("hoy");}
+
+/* ---------- Anti-zoom (familia Stick) ----------
+   Safari en iOS IGNORA `user-scalable=no` y `maximum-scale` desde iOS 10, así
+   que el meta viewport no basta: el zoom hay que interceptarlo evento por
+   evento. Todos los listeners van en `document` con `passive:false` (sin eso
+   el navegador ignora el preventDefault en eventos táctiles).
+   Detalle en STICK_UI_SYSTEM.md §6.6.1. */
+(function(){
+  const stop=e=>e.preventDefault();
+
+  // 1. Escritorio: pinch de trackpad y Ctrl+rueda llegan como 'wheel'.
+  document.addEventListener("wheel",e=>{if(e.ctrlKey)e.preventDefault();},{passive:false});
+
+  // 2. Safari (iOS y macOS): eventos propietarios del pinch.
+  for(const t of ["gesturestart","gesturechange","gestureend"])
+    document.addEventListener(t,stop,{passive:false});
+
+  // 3. iPhone: el pinch real son dos dedos. Cortarlo aquí es lo único que de
+  //    verdad frena el zoom en Safari móvil.
+  document.addEventListener("touchstart",e=>{if(e.touches.length>1)e.preventDefault();},{passive:false});
+  document.addEventListener("touchmove", e=>{if(e.touches.length>1)e.preventDefault();},{passive:false});
+
+  // 4. iPhone: doble toque para hacer zoom. Se anula solo si los dos toques
+  //    caen en el mismo punto (<30px) y en menos de 300ms — así marcar dos
+  //    ejercicios seguidos NO pierde el segundo toque.
+  let tPrev=0,xPrev=0,yPrev=0;
+  document.addEventListener("touchend",e=>{
+    const t=e.changedTouches[0]; if(!t) return;
+    if(e.timeStamp-tPrev<=300 && Math.abs(t.clientX-xPrev)<30 && Math.abs(t.clientY-yPrev)<30)
+      e.preventDefault();
+    tPrev=e.timeStamp; xPrev=t.clientX; yPrev=t.clientY;
+  },{passive:false});
+
+  // 5. Atajo de teclado. El navegador lo reserva y no siempre cede.
+  document.addEventListener("keydown",e=>{
+    if((e.ctrlKey||e.metaKey)&&["+","-","=","_","0"].includes(e.key))e.preventDefault();
+  },{passive:false});
+})();
 
 /* ---------- PWA: service worker (offline + instalable) ---------- */
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){

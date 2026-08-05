@@ -1,5 +1,5 @@
 /* STICK FIT — service worker (offline app shell) */
-const CACHE = 'stickfit-v11';
+const CACHE = 'stickfit-v13';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon.png'

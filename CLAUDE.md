@@ -13,7 +13,31 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
-- **Versión:** 1.13.0 — **marcar un ejercicio ya no re-renderiza la vista Hoy**.
+- **Versión:** 1.15.0 — **zoom bloqueado también por pinch y doble toque en iPhone**.
+- v1.15.0 (anti-zoom endurecido): el Señor Stick pidió que fuera **imposible** hacer zoom desde el
+  iPhone, priorizando esta app y STICK AROS. El bloque de v1.14.0 solo cubría trackpad y teclado.
+  Ahora la guardia vive en `document` (no en `window`) con `passive:false` y añade: `touchstart` y
+  `touchmove` con **dos dedos** → `preventDefault` (el pinch real de iOS), y `touchend` doble en el
+  **mismo punto** (<30px, <300ms) → `preventDefault` (doble toque para hacer zoom).
+  Caché SW → `stickfit-v13`. Verificado con eventos sintéticos sobre el archivo real en Chrome
+  headless: **12/12** — se cancelan pinch, doble toque, `gesture*` y Ctrl+rueda, y NO se cancelan el
+  scroll de un dedo ni dos toques seguidos en puntos lejanos. Con puntero grueso emulado el input
+  mide 16px; en escritorio sigue en 14px.
+- **Decisión (v1.15.0):** el guardia de doble toque compara **posición además de tiempo**. Un guardia
+  solo por tiempo (300ms) habría comido el segundo toque al marcar dos ejercicios seguidos en la
+  vista Hoy — exactamente el problema de "toques que se comen" que ya se corrigió en AROS. Con el
+  umbral de 30px, dos toques en filas distintas pasan intactos.
+- v1.14.0 (anti-zoom): pedido del Señor Stick para toda la familia Stick — al tocar un campo, el
+  iPhone hacía zoom y la app perdía el acabado de producto. Tres piezas: meta viewport con
+  `maximum-scale=1.0, user-scalable=no`; `html{touch-action:manipulation;text-size-adjust:100%}`; y
+  bajo `@media (pointer:coarse)` todos los `input/select/textarea` a `font-size:16px !important`.
+- **Decisión (v1.14.0):** la pieza que realmente corrige el caso es la de **16px**, no el meta
+  viewport: desde iOS 10 Safari **ignora** `maximum-scale`/`user-scalable`, y hace zoom automático al
+  enfocar cualquier campo cuya fuente mida menos de 16px (los `.field` estaban en 14px). El meta se
+  deja porque sí sirve en Android y en escritorio. El zoom por atajo de teclado (`Ctrl` + `+`/`-`)
+  lo reserva el navegador y no siempre es anulable desde la página. Regla en `STICK_UI_SYSTEM.md`
+  §6.6.1.
+- v1.13.0 — **marcar un ejercicio ya no re-renderiza la vista Hoy**.
 - v1.13.0 (marcado fluido): marcar el check llamaba a `renderHoy()`, que reconstruía el `innerHTML`
   entero. Efecto: la animación del check nunca se veía (el nodo nacía ya marcado, sin estado previo
   desde el cual animar), la entrada escalonada `list-stagger` se relanzaba en toda la lista y el
