@@ -241,18 +241,23 @@ nav.dock{
 .ex-log.logged{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.30);color:var(--emerald)}
 .ex-log.logged .elk{color:rgba(52,211,153,.75)}
 
-/* ── Calendario de asistencia (cuadritos mudos: sin número de día) ── */
-.calgrid{display:grid;grid-template-columns:repeat(7,13px);gap:5px;width:max-content}
-.calcell{width:13px;height:13px;border-radius:4px;font-size:0;line-height:0;cursor:pointer;
+/* ── Calendario de asistencia (a todo el ancho, con número de día) ── */
+.calgrid,.calhead{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;width:100%}
+.calhead{margin-bottom:6px}
+.calhead span{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--zinc-600);text-align:center;line-height:1}
+.calcell{aspect-ratio:1;border-radius:9px;display:grid;place-items:center;cursor:pointer;
+  font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--zinc-500);
   background:rgba(24,24,27,.5);border:1px solid rgba(63,63,70,.3);transition:transform .15s var(--ease)}
-.calcell:active{transform:scale(.85)}
+.calcell:active{transform:scale(.9)}
 .calcell.blank{background:transparent;border-color:transparent;pointer-events:none}
-.calcell.rest{background:rgba(24,24,27,.35);border-color:rgba(63,63,70,.2)}
-.calcell.miss{background:rgba(24,24,27,.6);border-color:rgba(251,113,133,.28)}
-.calcell.part{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35)}
-.calcell.full{background:var(--emerald);border-color:var(--emerald)}
+.calcell.rest{background:rgba(24,24,27,.35);border-color:rgba(63,63,70,.2);color:var(--zinc-600)}
+.calcell.miss{background:rgba(24,24,27,.6);border-color:rgba(251,113,133,.28);color:rgba(251,113,133,.75)}
+.calcell.part{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35);color:var(--emerald)}
+.calcell.full{background:var(--emerald);border-color:var(--emerald);color:#06281c}
 .calcell.fut{opacity:.4}
 .calcell.today{box-shadow:0 0 0 2px rgba(255,255,255,.55)}
+.calcell.today:not(.full){color:#fff}
 .callegend{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:12px}
 .callegend span{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--zinc-500)}
 .callegend i{width:9px;height:9px;border-radius:3px;display:inline-block;border:1px solid transparent}
@@ -531,6 +536,15 @@ const DAYNAME={lun:"Lunes",mar:"Martes",mie:"Miércoles",jue:"Jueves",vie:"Viern
 const uid=()=>Math.random().toString(36).slice(2,9);
 const todayKey=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
 const jsDayToId=()=>{const m={0:"dom",1:"lun",2:"mar",3:"mie",4:"jue",5:"vie",6:"sab"};return m[new Date().getDay()];};
+/* Fecha real de un día de la semana EN CURSO (lunes→domingo, como el selector de Hoy).
+   Sin esto, marcar el martes desde un miércoles guardaba el check con la fecha de hoy y el
+   calendario de asistencia pintaba el día equivocado. */
+const DAY_IDX={lun:0,mar:1,mie:2,jue:3,vie:4,sab:5,dom:6};
+function dateOfDay(dayId){
+  const n=new Date();
+  const delta=(DAY_IDX[dayId]||0)-((n.getDay()+6)%7);   // 0 = lunes
+  return isoOf(new Date(n.getFullYear(),n.getMonth(),n.getDate()+delta));
+}
 
 /* ---------- Catálogo semilla de ejercicios ---------- */
 const GROUPS=["Pecho","Espalda","Pierna","Hombro","Brazo","Core"];
@@ -819,7 +833,7 @@ function muscleSVG(active){
 /* ============================================================
    VISTA: HOY
    ============================================================ */
-function checkKey(dayId,exIdx){return `${todayKey()}|${dayId}|${exIdx}`;}
+function checkKey(dayId,exIdx){return `${dateOfDay(dayId)}|${dayId}|${exIdx}`;}
 function isChecked(dayId,exIdx){return !!S.checks[checkKey(dayId,exIdx)];}
 function dayProgress(dayId){
   const day=activeRoutine().days[dayId];
@@ -831,8 +845,9 @@ function renderHoy(){
   const r=activeRoutine();
   const day=r.days[selectedDay];
   const isToday=selectedDay===jsDayToId();
+  const fechaSel=dateOfDay(selectedDay);
   let h=`<div class="view-head">
-    <div class="label">${isToday?"Hoy · "+DAYNAME[selectedDay]:DAYNAME[selectedDay]}</div>
+    <div class="label">${isToday?"Hoy · ":""}${DAYNAME[selectedDay]} · ${fechaCorta(fechaSel)}</div>
     <div class="h1" style="margin-top:2px">${day.rest?"Descanso":day.focus}</div>
     <div class="sub" style="margin-top:4px">Rutina activa · <b style="color:var(--zinc-300)">${r.name}</b></div>
   </div>`;
@@ -842,6 +857,14 @@ function renderHoy(){
     return `<div class="daypill${id===selectedDay?" on":""}${dd.rest?" rest":""}${pct===100?" complete":""}" data-day="${id}">
       <span class="dot"></span><div class="dw">${lbl}</div><div class="df">${dd.rest?"Rest":dd.focus.replace(/ [AB]$/,"")}</div></div>`;
   }).join("")+`</div>`;
+  /* Lo que se marque queda guardado en la fecha del día elegido, no en la de hoy: conviene
+     decirlo cuando el día visto no es hoy. */
+  if(!isToday&&!day.rest){
+    const pasado=fechaSel<todayKey();
+    h+=`<div class="sub" style="margin-top:10px;font-size:11px;color:${pasado?"var(--zinc-500)":"var(--amber)"}">
+      ${pasado?`Estás completando el <b style="color:var(--zinc-300)">${fechaLarga(fechaSel)}</b>; así queda en el calendario.`
+              :`Este día aún no llega: lo que marques quedará guardado el <b>${fechaLarga(fechaSel)}</b>.`}</div>`;
+  }
   h+=measureReminderBanner();
 
   if(day.rest){
@@ -866,7 +889,7 @@ function renderHoy(){
     const done=isChecked(selectedDay,i);
     const le=lastEntry(item.exId);
     const sug=le?nextTargetObj(e,le):null;
-    const hoy=todayEntry(item.exId);
+    const hoy=dayEntry(item.exId,selectedDay);
     h+=`<div class="ex${done?" done":""}" data-idx="${i}">
       <div class="chk" data-check="${i}">${IC.check}</div>
       <div class="ex-body" data-open="${item.exId}">
@@ -944,8 +967,9 @@ function nSetsOf(item){return Math.max(1,Math.min(12,parseInt(item.sets)||3));}
 function epley(x){return (x.weight||0)*(1+(x.reps||0)/30);}
 function bestSet(rows){return rows.reduce((a,b)=>epley(b)>epley(a)?b:a);}
 function entrySets(l){return (l.sets&&l.sets.length)?l.sets:[{weight:l.weight,reps:l.reps}];}
-function todayEntry(exId){
-  const t=todayKey();
+/* Registro de un ejercicio en la fecha del día seleccionado (no necesariamente hoy). */
+function dayEntry(exId,dayId){
+  const t=dateOfDay(dayId);
   return (S.history||[]).filter(l=>l.exId===exId&&l.date===t).slice(-1)[0]||null;
 }
 function setsRange(l){
@@ -973,13 +997,15 @@ function openExLog(dayId,idx){
   const day=activeRoutine().days[dayId];
   const item=day.exercises[idx];if(!item)return;
   const e=getEx(item.exId);if(!e)return;
-  const prev=todayEntry(item.exId);
+  const fecha=dateOfDay(dayId);
+  const esHoy=fecha===todayKey();
+  const prev=dayEntry(item.exId,dayId);
   const le=lastEntry(item.exId);
   const sug=le?nextTargetObj(e,le):null;
   const rows=prev?entrySets(prev):Array.from({length:nSetsOf(item)},()=>({weight:sug?sug.weight:null,reps:sug?sug.reps:null}));
 
   let h=`<div class="sheet-grab"></div><div class="sheet-head">
-    <div style="min-width:0"><span class="label-mono">${DAYNAME[dayId]} · ${day.focus}</span>
+    <div style="min-width:0"><span class="label-mono">${DAYNAME[dayId]} ${fechaCorta(fecha)} · ${day.focus}</span>
       <div class="h2" style="margin-top:3px">${e.name}</div></div>
     <button class="close-x" data-close>×</button></div>`;
   h+=`<div style="display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap">
@@ -990,7 +1016,7 @@ function openExLog(dayId,idx){
     <div id="setsBox">${rows.map((s,si)=>setRowHTML(si,s.weight,s.reps)).join("")}</div>
     <button class="btn-secondary" id="addSet" style="width:100%;margin-top:4px">${IC.plus} Añadir serie</button>`;
   h+=`<button class="btn-primary" style="width:100%;margin-top:10px" id="saveLog">${prev?"Actualizar registro":"Guardar ejercicio"}</button>`;
-  if(prev)h+=`<button class="btn-danger" style="width:100%;margin-top:8px" id="delLog">Eliminar registro de hoy</button>`;
+  if(prev)h+=`<button class="btn-danger" style="width:100%;margin-top:8px" id="delLog">Eliminar registro ${esHoy?"de hoy":"del "+fechaCorta(fecha)}</button>`;
 
   const logs=(S.history||[]).filter(l=>l.exId===item.exId).sort((a,b)=>a.date<b.date?-1:1).slice(-8).reverse();
   if(logs.length){
@@ -1021,12 +1047,12 @@ function openExLog(dayId,idx){
     if(!out.length)return toast("Anota al menos una serie");
     const best=bestSet(out);
     if(prev){Object.assign(prev,{weight:best.weight,reps:best.reps,sets:out});}
-    else S.history.push({id:uid(),date:todayKey(),exId:item.exId,weight:best.weight,reps:best.reps,sets:out});
+    else S.history.push({id:uid(),date:fecha,exId:item.exId,weight:best.weight,reps:best.reps,sets:out});
     S.checks[checkKey(dayId,idx)]=true;
     save();closeSheet();renderHoy();
     toast(prev?"Registro actualizado":`${e.name} registrado`);
   };
-  const dl=$("#delLog");if(dl)dl.onclick=()=>confirmSheet({title:"Eliminar registro",message:`¿Borrar las series de hoy de "${e.name}"?`,cta:"Eliminar",danger:true,onConfirm:()=>{
+  const dl=$("#delLog");if(dl)dl.onclick=()=>confirmSheet({title:"Eliminar registro",message:`¿Borrar las series ${esHoy?"de hoy":"del "+fechaLarga(fecha)} de "${e.name}"?`,cta:"Eliminar",danger:true,onConfirm:()=>{
     S.history=S.history.filter(l=>l!==prev);save();closeSheet();renderHoy();toast("Registro eliminado");
   }});
 }
@@ -1424,7 +1450,7 @@ function attendanceBlock(){
     if(iso===todayIso)cls+=" today";
     // el cuadrito no lleva número: el detalle del día sale al tocarlo (toast) o al pasar el cursor (title)
     const info=`${fechaLarga(iso)}${st.rest?" · descanso":st.trained?` · ${st.done}/${st.total} ejercicios`:future?" · pendiente":" · sin registro"}`;
-    cells+=`<div class="calcell ${cls}" data-cal="${info}" title="${info}"></div>`;
+    cells+=`<div class="calcell ${cls}" data-cal="${info}" title="${info}">${d}</div>`;
   }
   const pct=programados?Math.round(hechos/programados*100):0;
   const racha=currentStreak();
@@ -1437,6 +1463,7 @@ function attendanceBlock(){
       <button class="icon-btn" id="calPrev" title="Mes anterior" style="flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
       <button class="icon-btn" id="calNext" title="Mes siguiente" style="flex:none${isCur?";opacity:.35":""}" ${isCur?"disabled":""}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
     </div>
+    <div class="calhead">${DAYS.map(([,l])=>`<span>${l[0]}</span>`).join("")}</div>
     <div class="calgrid">${cells}</div>
     <div class="callegend">
       <span><i style="background:var(--emerald)"></i>Completo</span>
@@ -1450,7 +1477,7 @@ function attendanceBlock(){
     <div class="stat" style="flex:1;padding:12px 14px"><div class="label">Este mes</div>
       <div class="mono" style="font-size:20px;font-weight:800">${hechos}<small style="font-size:11px;color:var(--zinc-500);font-weight:700">${programados?" / "+programados:""}</small></div></div>
   </div>`;
-  h+=`<p class="muted" style="margin-top:12px;font-size:11px">Se marca solo: un día cuenta como entrenado en cuanto marcas un ejercicio o registras un peso. Toca un cuadrito para ver el día.</p></div>`;
+  h+=`<p class="muted" style="margin-top:12px;font-size:11px">Se marca solo: un día cuenta como entrenado en cuanto marcas un ejercicio o registras un peso. Toca un cuadrito para ver el día. ¿Se te olvidó marcar un día de esta semana? Elígelo en el selector de <b style="color:var(--zinc-400)">Hoy</b> y márcalo ahí: queda en su propia fecha.</p></div>`;
   return h;
 }
 

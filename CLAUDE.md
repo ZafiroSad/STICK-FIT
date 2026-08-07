@@ -13,6 +13,30 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
+- **Versión:** 1.17.0 — **calendario a todo el ancho** + el día que marcas se guarda en SU fecha.
+- v1.17.0 (fecha correcta): **bug corregido**. `checkKey()` y el registro de pesos usaban siempre
+  `todayKey()`, así que elegir el martes en el selector de Hoy y marcar ahí guardaba el check (y la
+  entrada de `history`) con la fecha de **hoy**: el calendario pintaba el día equivocado y el día
+  olvidado quedaba en "no fuiste". Nuevo `dateOfDay(dayId)` devuelve la fecha real de ese día dentro
+  de la **semana en curso** (lunes→domingo, igual que el selector); de ahí salen ahora `checkKey()`,
+  `dayEntry()` (antes `todayEntry`) y el `date` de la entrada de historial. Efecto colateral bueno:
+  las píldoras de la semana muestran el progreso real de cada día, no el de hoy repetido siete veces.
+  Caché SW → `stickfit-v15`.
+- v1.17.0 (calendario ancho): `.calgrid` pasa de `repeat(7,13px)` + `width:max-content` a
+  `repeat(7,1fr)` con `width:100%` y celdas de `aspect-ratio:1` (≈41 px en un iPhone). Con ese
+  tamaño el cuadrito **recupera el número de día** y vuelve la cabecera L-M-M-J-V-S-D; el número
+  toma el color del estado (verde a medias, rosa "no fuiste", oscuro sobre el verde sólido).
+- **Decisión (v1.17.0):** el día "mudo" de v1.11.0 existía porque el cuadrito medía 13 px y el
+  número no cabía. Al llegar a ~41 px la razón desaparece y el número es justo lo que permite
+  verificar de un vistazo que lo marcado cayó en el día correcto — que es el bug que se corrigió.
+- **Decisión (v1.17.0):** el selector de Hoy mapea a la **semana en curso**, no a "la ocurrencia
+  más reciente de ese día". Tocar un día que aún no llega da una fecha futura; se permite (el dato
+  es del usuario) pero la vista lo advierte en ámbar, y cuando el día es pasado lo dice en gris
+  ("Estás completando el 05 de ago de 2026"). La cabecera de Hoy y la hoja de registro llevan ahora
+  la fecha, para que nunca haya duda de dónde se está escribiendo.
+- **Pendiente conocido (v1.17.0):** no se puede marcar un día de **semanas anteriores**; el selector
+  solo cubre la semana actual. Si el Señor Stick lo necesita, habría que poder tocar un cuadrito del
+  calendario y abrir ese día en Hoy.
 - **Versión:** 1.16.0 — **logo blanco** (el maestro `LOGO.png` cambió de rojo a blanco).
 - v1.16.0 (identidad): el Señor Stick reemplazó el maestro `LOGO.png` (2000×2000) por la misma
   mancuerna de 3 discos por lado pero en **blanco `#ffffff`** sobre `#1e1f1f`. La geometría es
@@ -237,7 +261,8 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 ## Estructura funcional
 - **Portada** → botón "Entrenar hoy" (flag `onboarded`).
 - **Dock (5 vistas):** Hoy · Progreso · Rutinas · Ejercicios · Nutrición.
-- **Progreso:** asistencia del mes (cuadritos mudos de 13 px con flechas ‹ ›, racha, % de cumplimiento)
+- **Progreso:** asistencia del mes (calendario a todo el ancho con el número de día, flechas ‹ ›,
+  racha, % de cumplimiento)
   + peso corporal (meta con ritmo, barra inicio→meta, sparkline, "esperado hoy" vs real,
   **historial** con corrección y borrado)
   + medidas corporales (**tarjeta plegable**: cerrada muestra solo el resumen; abierta, diagrama
@@ -246,7 +271,8 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
   banda 10-20) + respaldo Exportar/Importar. Datos: `weightLog[]`, `weightGoal`, `measures[]`.
 - **Hoy:** selector de semana, checklist del día activo, barra de progreso y, **por ejercicio**, su
   propio botón de registro (hoja con una fila por serie en **lb**, pre-cargadas con el objetivo).
-  Los checks se guardan por fecha (`checks[fecha|dia|idx]`).
+  Los checks se guardan por fecha (`checks[fecha|dia|idx]`), y esa `fecha` es la del **día elegido en
+  el selector dentro de la semana en curso** (`dateOfDay`), no la de hoy: marcar ayer queda en ayer.
 - **Rutinas:** lista de planes; crear / renombrar / duplicar / activar / eliminar. Editor por día
   (enfoque, descanso, añadir/quitar ejercicios del catálogo, series/reps).
 - **Ejercicios:** catálogo de 31 ejercicios de fuerza agrupados por músculo. Ficha al click con
