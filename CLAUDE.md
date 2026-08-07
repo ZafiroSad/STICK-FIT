@@ -13,6 +13,26 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
+- **Versión:** 1.18.0 — **completar días de semanas anteriores** (tocar el calendario abre ese día).
+- v1.18.0 (semanas pasadas): resuelve el pendiente de v1.17.0. `dateOfDay(dayId,off)` acepta ahora un
+  desfase de semanas y la vista Hoy guarda ese desfase en `weekOffset` (0 = semana actual, 1 = la
+  pasada…). Tres formas de llegar a un día viejo: **tocar su cuadrito** en el calendario de asistencia
+  (`openDate()` calcula el `weekOffset` con `weekOffsetOf()` y salta a Hoy), las flechas ‹ › de la
+  nueva barra de semana en Hoy, o el botón **Hoy** de esa barra para volver. El botón Hoy del dock
+  también reinicia la semana. Caché SW → `stickfit-v16`.
+- v1.18.0 (detalles): las píldoras de la semana llevan el **número de día** (`LUN 27`), porque al
+  poder viajar entre semanas "Lun" solo ya no identifica una fecha. `lastEntry(exId,antes)` acepta un
+  tope: al completar un día pasado el objetivo sugerido sale de la sesión **anterior a ese día**, no
+  de una posterior que ya esté registrada.
+- **Decisión (v1.18.0):** el calendario **no** deja abrir días posteriores al domingo de la semana en
+  curso; ahí el toque sigue mostrando solo el detalle (toast). Hacia atrás no hay límite. Marcar un
+  día futuro de la semana en curso se mantiene permitido (con el aviso ámbar de v1.17.0): es el caso
+  de quien entrena de noche y adelanta el registro, no el de inventar sesiones de un mes que no llega.
+- **Decisión (v1.18.0):** `weekOffset` vive en memoria, no en `localStorage`, igual que `mzOpen`: es
+  posición de vista, y abrir la app siempre en la semana actual es lo predecible.
+- **Decisión (v1.18.0):** la etiqueta de la semana dice "Esta semana" / "Semana pasada" y solo usa el
+  rango de fechas ("20 jul – 26 jul") de dos semanas atrás. Con el rango completo, "Semana pasada ·
+  27 jul – 02 ago" se cortaba en un iPhone; los días exactos ya están en las píldoras y en la cabecera.
 - **Versión:** 1.17.0 — **calendario a todo el ancho** + el día que marcas se guarda en SU fecha.
 - v1.17.0 (fecha correcta): **bug corregido**. `checkKey()` y el registro de pesos usaban siempre
   `todayKey()`, así que elegir el martes en el selector de Hoy y marcar ahí guardaba el check (y la
@@ -34,9 +54,8 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
   es del usuario) pero la vista lo advierte en ámbar, y cuando el día es pasado lo dice en gris
   ("Estás completando el 05 de ago de 2026"). La cabecera de Hoy y la hoja de registro llevan ahora
   la fecha, para que nunca haya duda de dónde se está escribiendo.
-- **Pendiente conocido (v1.17.0):** no se puede marcar un día de **semanas anteriores**; el selector
-  solo cubre la semana actual. Si el Señor Stick lo necesita, habría que poder tocar un cuadrito del
-  calendario y abrir ese día en Hoy.
+- **Pendiente conocido (v1.17.0):** no se podía marcar un día de semanas anteriores. **Resuelto en
+  v1.18.0.**
 - **Versión:** 1.16.0 — **logo blanco** (el maestro `LOGO.png` cambió de rojo a blanco).
 - v1.16.0 (identidad): el Señor Stick reemplazó el maestro `LOGO.png` (2000×2000) por la misma
   mancuerna de 3 discos por lado pero en **blanco `#ffffff`** sobre `#1e1f1f`. La geometría es
@@ -262,17 +281,18 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 - **Portada** → botón "Entrenar hoy" (flag `onboarded`).
 - **Dock (5 vistas):** Hoy · Progreso · Rutinas · Ejercicios · Nutrición.
 - **Progreso:** asistencia del mes (calendario a todo el ancho con el número de día, flechas ‹ ›,
-  racha, % de cumplimiento)
+  racha, % de cumplimiento; tocar un día lo abre en Hoy para completarlo)
   + peso corporal (meta con ritmo, barra inicio→meta, sparkline, "esperado hoy" vs real,
   **historial** con corrección y borrado)
   + medidas corporales (**tarjeta plegable**: cerrada muestra solo el resumen; abierta, diagrama
   tocable de 9 zonas + recordatorio de próxima toma + Historial/Todas) + fuerza por ejercicio (sparkline,
   1RM Epley, próximo objetivo) + volumen semanal por grupo muscular (series/grupo de la rutina activa,
   banda 10-20) + respaldo Exportar/Importar. Datos: `weightLog[]`, `weightGoal`, `measures[]`.
-- **Hoy:** selector de semana, checklist del día activo, barra de progreso y, **por ejercicio**, su
+- **Hoy:** barra de semana (‹ › + "Hoy" para volver, `weekOffset`), selector de día con la fecha
+  (`LUN 27`), checklist del día activo, barra de progreso y, **por ejercicio**, su
   propio botón de registro (hoja con una fila por serie en **lb**, pre-cargadas con el objetivo).
-  Los checks se guardan por fecha (`checks[fecha|dia|idx]`), y esa `fecha` es la del **día elegido en
-  el selector dentro de la semana en curso** (`dateOfDay`), no la de hoy: marcar ayer queda en ayer.
+  Los checks se guardan por fecha (`checks[fecha|dia|idx]`), y esa `fecha` es la del **día y la semana
+  que se estén viendo** (`dateOfDay(dayId,weekOffset)`), no la de hoy: marcar ayer queda en ayer.
 - **Rutinas:** lista de planes; crear / renombrar / duplicar / activar / eliminar. Editor por día
   (enfoque, descanso, añadir/quitar ejercicios del catálogo, series/reps).
 - **Ejercicios:** catálogo de 31 ejercicios de fuerza agrupados por músculo. Ficha al click con
