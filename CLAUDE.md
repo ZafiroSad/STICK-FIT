@@ -13,6 +13,16 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
+- **Versión:** 1.16.0 — **logo blanco** (el maestro `LOGO.png` cambió de rojo a blanco).
+- v1.16.0 (identidad): el Señor Stick reemplazó el maestro `LOGO.png` (2000×2000) por la misma
+  mancuerna de 3 discos por lado pero en **blanco `#ffffff`** sobre `#1e1f1f`. La geometría es
+  idéntica a la que ya estaba medida en `tools/gen-icons.ps1` (discos de 79.5 px a ±293.5/±415/±535.5
+  del centro, altos 262/390/518; barra 424×76), verificado píxel a píxel contra el archivo nuevo, así
+  que **solo cambió el color**: `$RED` → `$FG` blanco en el script, `--brand:#9f1313` → `#ffffff` en
+  `index.html`, y los cuatro PNG (512/192/180/64) regenerados con el script. Caché SW → `stickfit-v14`.
+- **Decisión (v1.16.0):** el halo rojo de la placa de la portada (`#cover .mark-lg`,
+  `0 0 34px rgba(159,19,19,.18)`) pasa a `rgba(255,255,255,.09)`. Era el último rastro del rojo: con
+  la mancuerna blanca quedaba un aro rojizo alrededor del ícono que ya no correspondía a la marca.
 - **Versión:** 1.15.0 — **zoom bloqueado también por pinch y doble toque en iPhone**.
 - v1.15.0 (anti-zoom endurecido): el Señor Stick pidió que fuera **imposible** hacer zoom desde el
   iPhone, priorizando esta app y STICK AROS. El bloque de v1.14.0 solo cubría trackpad y teclado.
@@ -213,13 +223,16 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 ## Arquitectura
 - **Un solo archivo** `index.html` autónomo (HTML + CSS + JS vanilla). Sin build, sin dependencias.
 - `tools/gen-icons.ps1`: regenera los cuatro PNG de ícono dibujando el logo vectorialmente
-  (PowerShell + System.Drawing). Ejecutar solo si cambia el logo; no forma parte de la app.
+  (PowerShell + System.Drawing) a partir de la geometría medida de `LOGO.png`. Ejecutar solo si
+  cambia el logo; no forma parte de la app. Si cambia la **forma** (no solo el color) hay que volver
+  a medir el maestro y actualizar las constantes del script.
 - Persistencia en **`localStorage`** bajo la clave `stickfit-v1`.
 - Se abre directo en el navegador del celular (doble click al archivo, o servir por HTTP).
 - Lenguaje visual: **sistema STICK** replicado en CSS puro (dark-first zinc, sin emojis, CTA blanco,
   mono para valores, tarjetas blur, dock inferior). Tipografía: stack Century Gothic (variante AROS).
-- **Identidad:** logo mancuerna rojo `--brand:#9f1313`. El rojo se reserva a la marca (portada, header,
-  íconos); no se usa como color de datos ni de acciones — eso sigue en zinc/emerald/amber/sky.
+- **Identidad:** logo mancuerna **blanco** `--brand:#ffffff` sobre placa grafito (desde v1.16.0; antes
+  rojo `#9f1313`). Maestro: `LOGO.png` en la raíz. La marca no aporta color propio: los datos y las
+  acciones siguen en zinc/emerald/amber/sky.
 
 ## Estructura funcional
 - **Portada** → botón "Entrenar hoy" (flag `onboarded`).

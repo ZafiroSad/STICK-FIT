@@ -1,8 +1,9 @@
 # Genera los iconos de STICK FIT dibujando la mancuerna del logo vectorialmente a cada tamano.
+# Maestro de referencia: LOGO.png (2000x2000). La geometria de abajo esta medida de ese archivo.
 Add-Type -AssemblyName System.Drawing
 
 $OUT = "C:\Users\kevin\Documents\KEVIN\02. WORK\03. PROYECTOS PERSONALES\STICK FIT"
-$RED = [System.Drawing.Color]::FromArgb(159, 19, 19)   # #9F1313
+$FG  = [System.Drawing.Color]::FromArgb(255, 255, 255) # #FFFFFF (logo 2026-08-06)
 $BG  = [System.Drawing.Color]::FromArgb(30, 31, 31)    # #1E1F1F
 
 # Geometria medida del logo original (espacio 2000x2000, centro 999.5)
@@ -22,7 +23,7 @@ function New-Icon($size, $coverage, $path) {
 
   $s = ($size * $coverage) / $TOTALW      # escala origen -> destino
   $cx = $size / 2.0; $cy = $size / 2.0
-  $brush = New-Object System.Drawing.SolidBrush $RED
+  $brush = New-Object System.Drawing.SolidBrush $FG
 
   # Barra central (extremos rectos)
   $g.FillRectangle($brush, [float]($cx - $BARW*$s/2), [float]($cy - $BARH*$s/2), [float]($BARW*$s), [float]($BARH*$s))
