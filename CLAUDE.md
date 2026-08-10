@@ -13,7 +13,31 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
-- **Versión:** 1.16.0 — **logo blanco** (el maestro `LOGO.png` cambió de rojo a blanco).
+- **Versión:** 1.17.0 — **UI SYSTEM v2 «Campo y Vidrio» + modo claro**.
+- v1.17.0 (2026-08-09, migración v2): quinta y última app de la familia migrada al
+  `STICK_UI_SYSTEM.md` v2, cuyo referente visual es ahora el **PORTAFOLIO** de Kevin Gil.
+  Al ser un solo HTML sin Tailwind, la migración va sobre las variables CSS propias:
+  (1) **rampa grafito** — las variables `--zinc-*` conservan sus nombres y cambian todos sus valores
+  a los grises fríos del portafolio; entran `--tinta` (`#f7f8fa`) y `--contratinta` (`#15161b`), que
+  sustituyen a los `#fff`/`#000` fijos (el blanco y el negro puros salen de la paleta);
+  (2) **el campo** (`.campo` + 4 `.masa` + `.grano`) sustituye al `background-image` radial del
+  `body`, con todo el contenido dentro de `.lienzo` y los overlays fuera de él;
+  (3) **vidrio líquido** en tarjetas (26 px), topbar, dock, botones secundarios, botones ícono,
+  filas de ejercicio, pastillas de día, stats y campos;
+  (4) **píldoras** en todo lo pulsable; (5) **modo claro obligatorio** (§10) con botón Sol/Luna en la
+  topbar, `html.light`, persistencia en `localStorage` (`stick:tema`) y script anti-destello.
+  `theme-color` a `#15161b`. Caché SW → `stickfit-v15`.
+- **Decisión (v1.17.0):** el `--brand:#ffffff` de la mancuerna **no** se toca. El logo va sobre su
+  placa oscura en los dos temas; convertirlo a `--tinta` lo volvería invisible en modo claro.
+- **Defecto corregido durante la verificación (v1.17.0):** los overrides `html.light .daypill` y
+  `html.light .ex-log` tienen la **misma especificidad** que `.daypill.on` y `.ex-log.logged`, y al ir
+  después en el archivo los vencían: la pastilla del día activo salía blanca sobre blanco. Se
+  re-declaran los estados activos con `html.light .daypill.on` / `html.light .ex-log.logged`. Regla a
+  recordar: **al añadir un override de tema a una clase base, hay que re-declarar también sus
+  estados** (`.on`, `.logged`, `.active`).
+- Verificado en vivo con Chrome headless sobre la app servida por HTTP (430×900, ancho de teléfono),
+  portada e interior, en ambos temas.
+- v1.16.0 — **logo blanco** (el maestro `LOGO.png` cambió de rojo a blanco).
 - v1.16.0 (identidad): el Señor Stick reemplazó el maestro `LOGO.png` (2000×2000) por la misma
   mancuerna de 3 discos por lado pero en **blanco `#ffffff`** sobre `#1e1f1f`. La geometría es
   idéntica a la que ya estaba medida en `tools/gen-icons.ps1` (discos de 79.5 px a ±293.5/±415/±535.5
@@ -228,8 +252,10 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
   a medir el maestro y actualizar las constantes del script.
 - Persistencia en **`localStorage`** bajo la clave `stickfit-v1`.
 - Se abre directo en el navegador del celular (doble click al archivo, o servir por HTTP).
-- Lenguaje visual: **sistema STICK** replicado en CSS puro (dark-first zinc, sin emojis, CTA blanco,
-  mono para valores, tarjetas blur, dock inferior). Tipografía: stack Century Gothic (variante AROS).
+- Lenguaje visual: **sistema STICK v2 «Campo y Vidrio»** replicado en CSS puro (desde v1.17.0):
+  campo de luz animado en vez de fondo plano, vidrio líquido en vez de paneles, rampa grafito bajo
+  los nombres `--zinc-*`, píldoras en todo lo pulsable, sin emojis, CTA de tinta, mono para valores,
+  dock inferior y **botón de modo claro obligatorio**. Tipografía: stack Century Gothic (variante AROS).
 - **Identidad:** logo mancuerna **blanco** `--brand:#ffffff` sobre placa grafito (desde v1.16.0; antes
   rojo `#9f1313`). Maestro: `LOGO.png` en la raíz. La marca no aporta color propio: los datos y las
   acciones siguen en zinc/emerald/amber/sky.
