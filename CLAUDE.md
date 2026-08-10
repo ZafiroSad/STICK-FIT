@@ -13,8 +13,8 @@ repositorio. Los objetivos se describen por sus características físicas, no po
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)
-- **Versión:** 1.17.0 — **UI SYSTEM v2 «Campo y Vidrio» + modo claro**.
-- v1.17.0 (2026-08-09, migración v2): quinta y última app de la familia migrada al
+- **Versión:** 1.19.0 — **UI SYSTEM v2 «Campo y Vidrio» + modo claro**.
+- v1.19.0 (2026-08-09, migración v2): quinta y última app de la familia migrada al
   `STICK_UI_SYSTEM.md` v2, cuyo referente visual es ahora el **PORTAFOLIO** de Kevin Gil.
   Al ser un solo HTML sin Tailwind, la migración va sobre las variables CSS propias:
   (1) **rampa grafito** — las variables `--zinc-*` conservan sus nombres y cambian todos sus valores
@@ -26,10 +26,16 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
   filas de ejercicio, pastillas de día, stats y campos;
   (4) **píldoras** en todo lo pulsable; (5) **modo claro obligatorio** (§10) con botón Sol/Luna en la
   topbar, `html.light`, persistencia en `localStorage` (`stick:tema`) y script anti-destello.
-  `theme-color` a `#15161b`. Caché SW → `stickfit-v15`.
-- **Decisión (v1.17.0):** el `--brand:#ffffff` de la mancuerna **no** se toca. El logo va sobre su
+  `theme-color` a `#15161b`. Caché SW → `stickfit-v17`.
+- **Nota de fusión (v1.19.0):** esta migración se hizo partiendo de v1.16.0 en paralelo a los
+  cambios funcionales de v1.17.0/v1.18.0 (calendario ancho, fecha correcta, `weekOffset`), que ya
+  estaban en el remoto. `index.html` fusionó sin conflicto —los cambios de ellos viven en el JS y
+  los míos en el CSS y el marcado— pero **las piezas de UI nuevas de v1.17/v1.18 llegaron con los
+  colores oscuros fijos del sistema viejo** y hubo que pasarlas a tokens aparte. Por eso el número
+  salta de 1.18.0 a 1.19.0, no a 1.17.0.
+- **Decisión (v1.19.0):** el `--brand:#ffffff` de la mancuerna **no** se toca. El logo va sobre su
   placa oscura en los dos temas; convertirlo a `--tinta` lo volvería invisible en modo claro.
-- **Defecto corregido durante la verificación (v1.17.0):** los overrides `html.light .daypill` y
+- **Defecto corregido durante la verificación (v1.19.0):** los overrides `html.light .daypill` y
   `html.light .ex-log` tienen la **misma especificidad** que `.daypill.on` y `.ex-log.logged`, y al ir
   después en el archivo los vencían: la pastilla del día activo salía blanca sobre blanco. Se
   re-declaran los estados activos con `html.light .daypill.on` / `html.light .ex-log.logged`. Regla a
@@ -37,6 +43,49 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
   estados** (`.on`, `.logged`, `.active`).
 - Verificado en vivo con Chrome headless sobre la app servida por HTTP (430×900, ancho de teléfono),
   portada e interior, en ambos temas.
+- v1.18.0 — **completar días de semanas anteriores** (tocar el calendario abre ese día).
+- v1.18.0 (semanas pasadas): resuelve el pendiente de v1.17.0. `dateOfDay(dayId,off)` acepta ahora un
+  desfase de semanas y la vista Hoy guarda ese desfase en `weekOffset` (0 = semana actual, 1 = la
+  pasada…). Tres formas de llegar a un día viejo: **tocar su cuadrito** en el calendario de asistencia
+  (`openDate()` calcula el `weekOffset` con `weekOffsetOf()` y salta a Hoy), las flechas ‹ › de la
+  nueva barra de semana en Hoy, o el botón **Hoy** de esa barra para volver. El botón Hoy del dock
+  también reinicia la semana. Caché SW → `stickfit-v16`.
+- v1.18.0 (detalles): las píldoras de la semana llevan el **número de día** (`LUN 27`), porque al
+  poder viajar entre semanas "Lun" solo ya no identifica una fecha. `lastEntry(exId,antes)` acepta un
+  tope: al completar un día pasado el objetivo sugerido sale de la sesión **anterior a ese día**, no
+  de una posterior que ya esté registrada.
+- **Decisión (v1.18.0):** el calendario **no** deja abrir días posteriores al domingo de la semana en
+  curso; ahí el toque sigue mostrando solo el detalle (toast). Hacia atrás no hay límite. Marcar un
+  día futuro de la semana en curso se mantiene permitido (con el aviso ámbar de v1.17.0): es el caso
+  de quien entrena de noche y adelanta el registro, no el de inventar sesiones de un mes que no llega.
+- **Decisión (v1.18.0):** `weekOffset` vive en memoria, no en `localStorage`, igual que `mzOpen`: es
+  posición de vista, y abrir la app siempre en la semana actual es lo predecible.
+- **Decisión (v1.18.0):** la etiqueta de la semana dice "Esta semana" / "Semana pasada" y solo usa el
+  rango de fechas ("20 jul – 26 jul") de dos semanas atrás. Con el rango completo, "Semana pasada ·
+  27 jul – 02 ago" se cortaba en un iPhone; los días exactos ya están en las píldoras y en la cabecera.
+- **Versión:** 1.17.0 — **calendario a todo el ancho** + el día que marcas se guarda en SU fecha.
+- v1.17.0 (fecha correcta): **bug corregido**. `checkKey()` y el registro de pesos usaban siempre
+  `todayKey()`, así que elegir el martes en el selector de Hoy y marcar ahí guardaba el check (y la
+  entrada de `history`) con la fecha de **hoy**: el calendario pintaba el día equivocado y el día
+  olvidado quedaba en "no fuiste". Nuevo `dateOfDay(dayId)` devuelve la fecha real de ese día dentro
+  de la **semana en curso** (lunes→domingo, igual que el selector); de ahí salen ahora `checkKey()`,
+  `dayEntry()` (antes `todayEntry`) y el `date` de la entrada de historial. Efecto colateral bueno:
+  las píldoras de la semana muestran el progreso real de cada día, no el de hoy repetido siete veces.
+  Caché SW → `stickfit-v15`.
+- v1.17.0 (calendario ancho): `.calgrid` pasa de `repeat(7,13px)` + `width:max-content` a
+  `repeat(7,1fr)` con `width:100%` y celdas de `aspect-ratio:1` (≈41 px en un iPhone). Con ese
+  tamaño el cuadrito **recupera el número de día** y vuelve la cabecera L-M-M-J-V-S-D; el número
+  toma el color del estado (verde a medias, rosa "no fuiste", oscuro sobre el verde sólido).
+- **Decisión (v1.17.0):** el día "mudo" de v1.11.0 existía porque el cuadrito medía 13 px y el
+  número no cabía. Al llegar a ~41 px la razón desaparece y el número es justo lo que permite
+  verificar de un vistazo que lo marcado cayó en el día correcto — que es el bug que se corrigió.
+- **Decisión (v1.17.0):** el selector de Hoy mapea a la **semana en curso**, no a "la ocurrencia
+  más reciente de ese día". Tocar un día que aún no llega da una fecha futura; se permite (el dato
+  es del usuario) pero la vista lo advierte en ámbar, y cuando el día es pasado lo dice en gris
+  ("Estás completando el 05 de ago de 2026"). La cabecera de Hoy y la hoja de registro llevan ahora
+  la fecha, para que nunca haya duda de dónde se está escribiendo.
+- **Pendiente conocido (v1.17.0):** no se podía marcar un día de semanas anteriores. **Resuelto en
+  v1.18.0.**
 - v1.16.0 — **logo blanco** (el maestro `LOGO.png` cambió de rojo a blanco).
 - v1.16.0 (identidad): el Señor Stick reemplazó el maestro `LOGO.png` (2000×2000) por la misma
   mancuerna de 3 discos por lado pero en **blanco `#ffffff`** sobre `#1e1f1f`. La geometría es
@@ -263,16 +312,19 @@ el 2026-08-01, junto a las demás apps de la familia Stick).
 ## Estructura funcional
 - **Portada** → botón "Entrenar hoy" (flag `onboarded`).
 - **Dock (5 vistas):** Hoy · Progreso · Rutinas · Ejercicios · Nutrición.
-- **Progreso:** asistencia del mes (cuadritos mudos de 13 px con flechas ‹ ›, racha, % de cumplimiento)
+- **Progreso:** asistencia del mes (calendario a todo el ancho con el número de día, flechas ‹ ›,
+  racha, % de cumplimiento; tocar un día lo abre en Hoy para completarlo)
   + peso corporal (meta con ritmo, barra inicio→meta, sparkline, "esperado hoy" vs real,
   **historial** con corrección y borrado)
   + medidas corporales (**tarjeta plegable**: cerrada muestra solo el resumen; abierta, diagrama
   tocable de 9 zonas + recordatorio de próxima toma + Historial/Todas) + fuerza por ejercicio (sparkline,
   1RM Epley, próximo objetivo) + volumen semanal por grupo muscular (series/grupo de la rutina activa,
   banda 10-20) + respaldo Exportar/Importar. Datos: `weightLog[]`, `weightGoal`, `measures[]`.
-- **Hoy:** selector de semana, checklist del día activo, barra de progreso y, **por ejercicio**, su
+- **Hoy:** barra de semana (‹ › + "Hoy" para volver, `weekOffset`), selector de día con la fecha
+  (`LUN 27`), checklist del día activo, barra de progreso y, **por ejercicio**, su
   propio botón de registro (hoja con una fila por serie en **lb**, pre-cargadas con el objetivo).
-  Los checks se guardan por fecha (`checks[fecha|dia|idx]`).
+  Los checks se guardan por fecha (`checks[fecha|dia|idx]`), y esa `fecha` es la del **día y la semana
+  que se estén viendo** (`dateOfDay(dayId,weekOffset)`), no la de hoy: marcar ayer queda en ayer.
 - **Rutinas:** lista de planes; crear / renombrar / duplicar / activar / eliminar. Editor por día
   (enfoque, descanso, añadir/quitar ejercicios del catálogo, series/reps).
 - **Ejercicios:** catálogo de 31 ejercicios de fuerza agrupados por músculo. Ficha al click con

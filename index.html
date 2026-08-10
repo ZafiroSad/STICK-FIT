@@ -53,6 +53,12 @@
   --masa-1:hsl(214 22% 62% / .30); --masa-2:hsl(32 30% 64% / .22);
   --masa-3:hsl(28 16% 58% / .20);  --masa-4:hsl(196 18% 60% / .18);
   --masa-op:.55; --grano-op:.045;
+
+  /* Superficies internas (filas, celdas, chips de pantallas secundarias).
+     Un solo par de tokens evita repetir rgba oscuros que no invierten. */
+  --sup:rgba(255,255,255,.045);
+  --sup-2:rgba(255,255,255,.09);
+  --brd:var(--v-borde);
 }
 
 /* ── MODO CLARO (obligatorio en toda app de la familia — STICK_UI_SYSTEM.md 10) ── */
@@ -76,6 +82,9 @@ html.light{
   --masa-1:hsl(214 42% 62% / .20); --masa-2:hsl(32 56% 64% / .17);
   --masa-3:hsl(28 34% 58% / .14);  --masa-4:hsl(196 40% 60% / .14);
   --masa-op:.70; --grano-op:.030;
+
+  --sup:rgba(255,255,255,.72);
+  --sup-2:rgba(255,255,255,.92);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{background:var(--bg);font-family:var(--font);-webkit-text-size-adjust:100%;text-size-adjust:100%;
@@ -235,7 +244,7 @@ html.light .field input:focus,html.light .field select:focus,html.light .field t
 /* ── Badges ── */
 .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
   font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
-  background:rgba(82,82,91,.15);border:1px solid rgba(82,82,91,.3);color:var(--zinc-350)}
+  background:var(--sup-2);border:1px solid rgba(82,82,91,.3);color:var(--zinc-350)}
 .badge.active{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3);color:var(--emerald)}
 .badge.rest{background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.28);color:var(--sky)}
 .chip{padding:4px 10px;border-radius:999px;font-size:10px;font-weight:700;
@@ -254,7 +263,7 @@ header.top{
   padding:0 18px;max-width:520px;margin:0 auto}
 .brand{display:flex;align-items:center;gap:10px}
 .brand .mark{width:34px;height:34px;border-radius:11px;
-  background:linear-gradient(140deg,#26262b,#141418);border:1px solid rgba(63,63,70,.6);
+  background:linear-gradient(140deg,#26262b,#141418);border:1px solid var(--brd);
   display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.4)}
 .logo-mark{display:block;overflow:visible}
 .brand .name{font-size:14px;font-weight:700;letter-spacing:.02em;color:var(--tinta)}
@@ -335,18 +344,23 @@ html.light .ex-log{background:rgba(255,255,255,.78)}
 html.light .ex-log.logged{background:rgba(5,150,105,.10);border-color:rgba(5,150,105,.30)}
 .ex-log.logged .elk{color:rgba(52,211,153,.75)}
 
-/* ── Calendario de asistencia (cuadritos mudos: sin número de día) ── */
-.calgrid{display:grid;grid-template-columns:repeat(7,13px);gap:5px;width:max-content}
-.calcell{width:13px;height:13px;border-radius:4px;font-size:0;line-height:0;cursor:pointer;
-  background:rgba(24,24,27,.5);border:1px solid rgba(63,63,70,.3);transition:transform .15s var(--ease)}
-.calcell:active{transform:scale(.85)}
+/* ── Calendario de asistencia (a todo el ancho, con número de día) ── */
+.calgrid,.calhead{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;width:100%}
+.calhead{margin-bottom:6px}
+.calhead span{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--zinc-600);text-align:center;line-height:1}
+.calcell{aspect-ratio:1;border-radius:9px;display:grid;place-items:center;cursor:pointer;
+  font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--zinc-500);
+  background:var(--sup);border:1px solid var(--brd);transition:transform .15s var(--ease)}
+.calcell:active{transform:scale(.9)}
 .calcell.blank{background:transparent;border-color:transparent;pointer-events:none}
-.calcell.rest{background:rgba(24,24,27,.35);border-color:rgba(63,63,70,.2)}
-.calcell.miss{background:rgba(24,24,27,.6);border-color:rgba(251,113,133,.28)}
-.calcell.part{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35)}
-.calcell.full{background:var(--emerald);border-color:var(--emerald)}
+.calcell.rest{background:var(--sup);border-color:var(--brd);color:var(--zinc-600)}
+.calcell.miss{background:var(--sup-2);border-color:rgba(251,113,133,.28);color:rgba(251,113,133,.75)}
+.calcell.part{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35);color:var(--emerald)}
+.calcell.full{background:var(--emerald);border-color:var(--emerald);color:#06281c}
 .calcell.fut{opacity:.4}
 .calcell.today{box-shadow:0 0 0 2px rgba(255,255,255,.55)}
+.calcell.today:not(.full){color:var(--tinta)}
 .callegend{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:12px}
 .callegend span{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--zinc-500)}
 .callegend i{width:9px;height:9px;border-radius:3px;display:inline-block;border:1px solid transparent}
@@ -365,7 +379,7 @@ html.light .ex-log.logged{background:rgba(5,150,105,.10);border-color:rgba(5,150
 .bmap .mzhit{fill:transparent;cursor:pointer}
 .mz-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
 .mztile{text-align:left;padding:8px 10px;border-radius:12px;cursor:pointer;
-  background:rgba(24,24,27,.45);border:1px solid rgba(63,63,70,.32);transition:.2s var(--ease)}
+  background:var(--sup);border:1px solid var(--brd);transition:.2s var(--ease)}
 .mztile:active{transform:scale(.985)}
 .mztile.has{border-color:rgba(52,211,153,.28)}
 .mztile.on{border-color:rgba(52,211,153,.7);background:rgba(52,211,153,.08)}
@@ -375,7 +389,7 @@ html.light .ex-log.logged{background:rgba(5,150,105,.10);border-color:rgba(5,150
 .mztile .mzv small{font-size:10px;color:var(--zinc-500);font-weight:700}
 .mztile .mzd{display:block;font-size:10px;font-weight:700;margin-top:1px}
 .mz-note{display:flex;align-items:flex-start;gap:9px;padding:11px 13px;border-radius:14px;margin-top:12px;
-  background:rgba(24,24,27,.45);border:1px solid rgba(63,63,70,.32)}
+  background:var(--sup);border:1px solid var(--brd)}
 .mz-note.due{background:rgba(251,191,36,.09);border-color:rgba(251,191,36,.32)}
 .mz-note.ok{background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.25)}
 .mz-note b{color:var(--zinc-100)}
@@ -400,6 +414,17 @@ html.light .ex-log.logged{background:rgba(5,150,105,.10);border-color:rgba(5,150
 .bar i{display:block;height:100%;width:0;border-radius:999px;background:var(--tinta);transition:width .4s var(--ease)}
 
 /* ── Selector de días (semana) ── */
+/* ── Navegación de semana (Hoy) ── */
+.weeknav{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.weeknav .icon-btn{width:30px;height:30px;border-radius:10px}
+.weeknav .icon-btn[disabled]{opacity:.3;pointer-events:none}
+.wklabel{flex:1;min-width:0;text-align:center;font-size:10px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--zinc-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wklabel.past{color:var(--amber)}
+.wk-today{flex:none;padding:6px 11px;border-radius:999px;font-size:10px;font-weight:700;cursor:pointer;
+  background:rgba(255,255,255,.10);border:1px solid var(--brd);color:var(--tinta);
+  transition:transform .2s var(--ease)}
+.wk-today:active{transform:scale(.94)}
 .week{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 6px;margin:0 -2px}
 .daypill{flex:none;min-width:66px;border-radius:999px;padding:10px 6px;text-align:center;cursor:pointer;
   background:rgba(255,255,255,.05);border:1px solid var(--v-borde);transition:.2s var(--ease);position:relative}
@@ -421,11 +446,11 @@ html.light .daypill.on{background:var(--tinta);border-color:var(--tinta)}
 /* ── Catálogo ejercicios ── */
 .cat-group{margin-bottom:18px}
 .cat-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;
-  background:rgba(24,24,27,.4);border:1px solid rgba(63,63,70,.3);margin-bottom:7px;transition:.2s}
-.cat-item:hover{border-color:rgba(82,82,91,.6);background:rgba(39,39,42,.5)}
+  background:var(--sup);border:1px solid var(--brd);margin-bottom:7px;transition:.2s}
+.cat-item:hover{border-color:rgba(82,82,91,.6);background:var(--sup-2)}
 .cat-item:active{transform:scale(.99)}
 .mg-ico{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
-  background:linear-gradient(140deg,rgba(63,63,70,.3),rgba(24,24,27,.6));border:1px solid rgba(63,63,70,.4)}
+  background:var(--sup-2);border:1px solid var(--brd)}
 
 /* ── Modal ── */
 .overlay{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.8);
@@ -438,13 +463,13 @@ html.light .daypill.on{background:var(--tinta);border-color:var(--tinta)}
 @media(min-width:560px){.overlay{align-items:center}.sheet{border-radius:24px;max-height:88vh}}
 .sheet-grab{width:38px;height:4px;border-radius:999px;background:var(--zinc-700);margin:0 auto 16px}
 .sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px}
-.close-x{width:32px;height:32px;border-radius:999px;background:rgba(39,39,42,.6);border:none;color:var(--zinc-400);
+.close-x{width:32px;height:32px;border-radius:999px;background:var(--sup-2);border:none;color:var(--zinc-400);
   cursor:pointer;font-size:18px;display:grid;place-items:center;flex:none;transition:.2s}
 .close-x:hover{color:var(--tinta);background:rgba(255,255,255,.10)}
 
 /* ── Diagrama muscular ── */
 .muscle-wrap{display:flex;gap:18px;justify-content:center;padding:16px 14px 12px;border-radius:16px;
-  background:rgba(9,9,11,.4);border:1px solid rgba(63,63,70,.3);margin:14px 0 8px}
+  background:var(--sup);border:1px solid var(--brd);margin:14px 0 8px}
 .mfig-col{display:flex;flex-direction:column;align-items:center;gap:7px}
 .mfig-cap{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--zinc-600)}
 .muscle-wrap svg{width:94px;height:155px;display:block}
@@ -458,10 +483,10 @@ html.light .daypill.on{background:var(--tinta);border-color:var(--tinta)}
   color:var(--zinc-400);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
 .tech ol{list-style:none;counter-reset:s}
 .tech ol li{counter-increment:s;position:relative;padding:7px 0 7px 30px;font-size:13px;
-  color:var(--zinc-300);line-height:1.5;border-top:1px solid rgba(63,63,70,.25)}
+  color:var(--zinc-300);line-height:1.5;border-top:1px solid var(--brd)}
 .tech ol li:first-child{border-top:none}
 .tech ol li::before{content:counter(s);position:absolute;left:0;top:7px;width:20px;height:20px;
-  border-radius:7px;background:rgba(63,63,70,.4);color:var(--zinc-300);font-size:10px;font-weight:700;
+  border-radius:7px;background:var(--sup-2);color:var(--zinc-300);font-size:10px;font-weight:700;
   display:grid;place-items:center}
 .tech ul{list-style:none}
 .tech ul li{padding:5px 0 5px 16px;position:relative;font-size:13px;color:var(--zinc-400);line-height:1.5}
@@ -477,12 +502,12 @@ html.light .stat{background:rgba(255,255,255,.72)}
 .stat .sv{font-size:26px;font-weight:800;color:var(--tinta);letter-spacing:-.02em}
 .stat .sv small{font-size:13px;font-weight:700;color:var(--zinc-500);margin-left:3px}
 .stat .sl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--zinc-500);margin-top:4px}
-.macro-line{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid rgba(63,63,70,.25)}
+.macro-line{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--brd)}
 .macro-line:first-child{border-top:none}
 .macro-dot{width:10px;height:10px;border-radius:50%;flex:none}
 .empty{text-align:center;padding:34px 20px;color:var(--zinc-500)}
 .empty .ei{width:52px;height:52px;border-radius:16px;margin:0 auto 14px;display:grid;place-items:center;
-  background:rgba(63,63,70,.2);border:1px solid rgba(63,63,70,.4)}
+  background:var(--sup);border:1px solid var(--brd)}
 
 /* ── Portada ── */
 #cover{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;
@@ -490,7 +515,7 @@ html.light .stat{background:rgba(255,255,255,.72)}
   background:radial-gradient(900px 600px at 50% 30%,rgba(82,82,91,.10),transparent 60%),var(--bg);
   padding-top:calc(32px + env(safe-area-inset-top))}
 #cover .mark-lg{width:74px;height:74px;border-radius:22px;
-  background:linear-gradient(140deg,#26262b,#141418);border:1px solid rgba(63,63,70,.6);
+  background:linear-gradient(140deg,#26262b,#141418);border:1px solid var(--brd);
   display:grid;place-items:center;margin-bottom:26px;
   box-shadow:0 20px 50px rgba(0,0,0,.55),0 0 34px rgba(255,255,255,.09);
   animation:rise .5s var(--ease) both}
@@ -502,14 +527,14 @@ html.light .stat{background:rgba(255,255,255,.72)}
   color:var(--zinc-700);text-transform:uppercase;letter-spacing:.16em}
 
 .toast{position:fixed;top:calc(16px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);
-  z-index:120;background:var(--zinc-900);border:1px solid rgba(63,63,70,.6);border-radius:14px;
+  z-index:120;background:var(--bg-2);border:1px solid var(--brd);border-radius:14px;
   padding:12px 18px;font-size:13px;font-weight:600;color:var(--tinta);display:flex;align-items:center;gap:10px;
   box-shadow:0 12px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast .tdot{width:8px;height:8px;border-radius:50%;background:var(--emerald)}
 
 /* ── Meal plan (nutrición) ── */
-.mp-meal{padding:10px 0;border-top:1px solid rgba(63,63,70,.25)}
+.mp-meal{padding:10px 0;border-top:1px solid var(--brd)}
 .mp-meal.first{border-top:none;padding-top:0}
 .mp-meal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .mp-meal-name{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--zinc-400)}
@@ -539,22 +564,22 @@ html.light .mchip{background:rgba(255,255,255,.76)}
 .mchip i{font-style:normal;font-size:10px;font-weight:700;color:var(--zinc-550)}
 
 /* ── Registro set por set ── */
-.logex{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(63,63,70,.25)}
+.logex{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--brd)}
 .logex:last-of-type{border-bottom:none}
 .setrow{display:grid;grid-template-columns:66px 1fr 1fr;gap:8px;align-items:center;margin-bottom:6px}
 .setrow-h{margin-bottom:4px}
 .setrow-h .setlbl{text-align:left;padding-left:2px}
 .setlbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--zinc-500)}
-.setrow input{width:100%;background:rgba(9,9,11,.6);border:1px solid var(--zinc-800);border-radius:10px;
+.setrow input{width:100%;background:var(--sup);border:1px solid var(--brd);border-radius:999px;
   padding:9px 12px;font-size:14px;font-weight:600;color:var(--tinta);outline:none;font-family:inherit;
   font-variant-numeric:tabular-nums;transition:border-color .2s ease,background .2s ease}
-.setrow input:focus{border-color:var(--zinc-600);background:rgba(9,9,11,.85)}
-.sethist{border-top:1px solid rgba(63,63,70,.3);padding:9px 0}
+.setrow input:focus{border-color:var(--zinc-600);background:var(--sup-2)}
+.sethist{border-top:1px solid var(--brd);padding:9px 0}
 .sethist:first-of-type{border-top:none}
 .sethist .shd{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .setpills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .setpill{display:inline-flex;align-items:baseline;gap:4px;padding:3px 8px;border-radius:999px;
-  background:rgba(39,39,42,.6);border:1px solid rgba(63,63,70,.45);font-size:11px;
+  background:var(--sup-2);border:1px solid var(--brd);font-size:11px;
   font-variant-numeric:tabular-nums;color:var(--zinc-300)}
 .setpill i{font-style:normal;font-size:9px;font-weight:800;color:var(--zinc-550)}
 .setpill.best{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.3);color:var(--emerald)}
@@ -655,6 +680,27 @@ const DAYNAME={lun:"Lunes",mar:"Martes",mie:"Miércoles",jue:"Jueves",vie:"Viern
 const uid=()=>Math.random().toString(36).slice(2,9);
 const todayKey=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
 const jsDayToId=()=>{const m={0:"dom",1:"lun",2:"mar",3:"mie",4:"jue",5:"vie",6:"sab"};return m[new Date().getDay()];};
+/* Fecha real de un día dentro de la semana que se está viendo en Hoy (lunes→domingo).
+   `weekOffset` = cuántas semanas atrás está esa semana (0 = la actual). Sin esto, marcar el
+   martes desde un miércoles guardaba el check con la fecha de hoy y el calendario de
+   asistencia pintaba el día equivocado. */
+const DAY_IDX={lun:0,mar:1,mie:2,jue:3,vie:4,sab:5,dom:6};
+let weekOffset=0;
+function dateOfDay(dayId,off){
+  const n=new Date();
+  const w=off===undefined?weekOffset:off;
+  const delta=(DAY_IDX[dayId]||0)-((n.getDay()+6)%7)-7*w;   // 0 = lunes
+  return isoOf(new Date(n.getFullYear(),n.getMonth(),n.getDate()+delta));
+}
+/* Semanas completas entre la semana (lunes→domingo) de `iso` y la semana actual. */
+function weekOffsetOf(iso){
+  const p=String(iso).split("-");
+  const d=new Date(+p[0],+p[1]-1,+p[2]);
+  const n=new Date();
+  const lunA=new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()+6)%7));
+  const lunB=new Date(n.getFullYear(),n.getMonth(),n.getDate()-((n.getDay()+6)%7));
+  return Math.round((lunB-lunA)/604800000);
+}
 
 /* ---------- Catálogo semilla de ejercicios ---------- */
 const GROUPS=["Pecho","Espalda","Pierna","Hombro","Brazo","Core"];
@@ -943,7 +989,7 @@ function muscleSVG(active){
 /* ============================================================
    VISTA: HOY
    ============================================================ */
-function checkKey(dayId,exIdx){return `${todayKey()}|${dayId}|${exIdx}`;}
+function checkKey(dayId,exIdx){return `${dateOfDay(dayId)}|${dayId}|${exIdx}`;}
 function isChecked(dayId,exIdx){return !!S.checks[checkKey(dayId,exIdx)];}
 function dayProgress(dayId){
   const day=activeRoutine().days[dayId];
@@ -951,21 +997,53 @@ function dayProgress(dayId){
   const done=day.exercises.filter((_,i)=>isChecked(dayId,i)).length;
   return Math.round(done/day.exercises.length*100);
 }
+/* Etiqueta de la semana. Con el rango completo, "Semana pasada · 27 jul – 02 ago" se corta en
+   un iPhone: los días ya están en las píldoras, así que ahí basta con nombrarla. */
+function weekLabel(off){
+  if(off===0)return "Esta semana";
+  if(off===1)return "Semana pasada";
+  const corta=iso=>fechaCorta(iso).replace(/^0/,"");
+  return `${corta(dateOfDay("lun",off))} – ${corta(dateOfDay("dom",off))}`;
+}
+/* Abre en Hoy la fecha de un cuadrito del calendario de asistencia (puede ser de otra semana). */
+function openDate(iso){
+  weekOffset=weekOffsetOf(iso);
+  const p=iso.split("-");
+  selectedDay=DAY_IDS[new Date(+p[0],+p[1]-1,+p[2]).getDay()];
+  go("hoy");
+}
 function renderHoy(){
   const r=activeRoutine();
   const day=r.days[selectedDay];
-  const isToday=selectedDay===jsDayToId();
+  const fechaSel=dateOfDay(selectedDay);
+  const isToday=fechaSel===todayKey();
   let h=`<div class="view-head">
-    <div class="label">${isToday?"Hoy · "+DAYNAME[selectedDay]:DAYNAME[selectedDay]}</div>
+    <div class="label">${isToday?"Hoy · ":""}${DAYNAME[selectedDay]} · ${fechaCorta(fechaSel)}</div>
     <div class="h1" style="margin-top:2px">${day.rest?"Descanso":day.focus}</div>
     <div class="sub" style="margin-top:4px">Rutina activa · <b style="color:var(--zinc-300)">${r.name}</b></div>
+  </div>`;
+  // Navegación de semana: permite completar días de semanas anteriores
+  h+=`<div class="weeknav">
+    <button class="icon-btn" id="wkPrev" title="Semana anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="wklabel${weekOffset?" past":""}">${weekLabel(weekOffset)}</div>
+    <button class="icon-btn" id="wkNext" title="Semana siguiente" ${weekOffset?"":"disabled"}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    ${weekOffset?`<button class="wk-today" id="wkToday">Hoy</button>`:""}
   </div>`;
   // Semana
   h+=`<div class="week">`+DAYS.map(([id,lbl])=>{
     const dd=r.days[id];const pct=dayProgress(id);
+    const dnum=+dateOfDay(id).split("-")[2];
     return `<div class="daypill${id===selectedDay?" on":""}${dd.rest?" rest":""}${pct===100?" complete":""}" data-day="${id}">
-      <span class="dot"></span><div class="dw">${lbl}</div><div class="df">${dd.rest?"Rest":dd.focus.replace(/ [AB]$/,"")}</div></div>`;
+      <span class="dot"></span><div class="dw">${lbl} ${dnum}</div><div class="df">${dd.rest?"Rest":dd.focus.replace(/ [AB]$/,"")}</div></div>`;
   }).join("")+`</div>`;
+  /* Lo que se marque queda guardado en la fecha del día elegido, no en la de hoy: conviene
+     decirlo cuando el día visto no es hoy. */
+  if(!isToday&&!day.rest){
+    const pasado=fechaSel<todayKey();
+    h+=`<div class="sub" style="margin-top:10px;font-size:11px;color:${pasado?"var(--zinc-500)":"var(--amber)"}">
+      ${pasado?`Estás completando el <b style="color:var(--zinc-300)">${fechaLarga(fechaSel)}</b>; así queda en el calendario.`
+              :`Este día aún no llega: lo que marques quedará guardado el <b>${fechaLarga(fechaSel)}</b>.`}</div>`;
+  }
   h+=measureReminderBanner();
 
   if(day.rest){
@@ -988,9 +1066,9 @@ function renderHoy(){
   day.exercises.forEach((item,i)=>{
     const e=getEx(item.exId);if(!e)return;
     const done=isChecked(selectedDay,i);
-    const le=lastEntry(item.exId);
+    const le=lastEntry(item.exId,fechaSel);
     const sug=le?nextTargetObj(e,le):null;
-    const hoy=todayEntry(item.exId);
+    const hoy=dayEntry(item.exId,selectedDay);
     h+=`<div class="ex${done?" done":""}" data-idx="${i}">
       <div class="chk" data-check="${i}">${IC.check}</div>
       <div class="ex-body" data-open="${item.exId}">
@@ -1046,6 +1124,9 @@ function setCheck(i,done){
 }
 function bindHoy(){
   const mn=$("#measNotice");if(mn)mn.onclick=()=>{mzOpen=true;go("progreso");}; // el aviso lleva a la tarjeta ya abierta
+  const wp=$("#wkPrev");if(wp)wp.onclick=()=>{weekOffset++;renderHoy();};
+  const wn=$("#wkNext");if(wn&&!wn.disabled)wn.onclick=()=>{weekOffset=Math.max(0,weekOffset-1);renderHoy();};
+  const wt=$("#wkToday");if(wt)wt.onclick=()=>{weekOffset=0;selectedDay=jsDayToId();renderHoy();};
   $("#v-hoy").querySelectorAll(".daypill").forEach(p=>p.onclick=()=>{selectedDay=p.dataset.day;renderHoy();});
   $("#v-hoy").querySelectorAll("[data-check]").forEach(c=>c.onclick=e=>{
     e.stopPropagation();const i=+c.dataset.check;
@@ -1068,8 +1149,9 @@ function nSetsOf(item){return Math.max(1,Math.min(12,parseInt(item.sets)||3));}
 function epley(x){return (x.weight||0)*(1+(x.reps||0)/30);}
 function bestSet(rows){return rows.reduce((a,b)=>epley(b)>epley(a)?b:a);}
 function entrySets(l){return (l.sets&&l.sets.length)?l.sets:[{weight:l.weight,reps:l.reps}];}
-function todayEntry(exId){
-  const t=todayKey();
+/* Registro de un ejercicio en la fecha del día seleccionado (no necesariamente hoy). */
+function dayEntry(exId,dayId){
+  const t=dateOfDay(dayId);
   return (S.history||[]).filter(l=>l.exId===exId&&l.date===t).slice(-1)[0]||null;
 }
 function setsRange(l){
@@ -1097,13 +1179,15 @@ function openExLog(dayId,idx){
   const day=activeRoutine().days[dayId];
   const item=day.exercises[idx];if(!item)return;
   const e=getEx(item.exId);if(!e)return;
-  const prev=todayEntry(item.exId);
-  const le=lastEntry(item.exId);
+  const fecha=dateOfDay(dayId);
+  const esHoy=fecha===todayKey();
+  const prev=dayEntry(item.exId,dayId);
+  const le=lastEntry(item.exId,fecha);
   const sug=le?nextTargetObj(e,le):null;
   const rows=prev?entrySets(prev):Array.from({length:nSetsOf(item)},()=>({weight:sug?sug.weight:null,reps:sug?sug.reps:null}));
 
   let h=`<div class="sheet-grab"></div><div class="sheet-head">
-    <div style="min-width:0"><span class="label-mono">${DAYNAME[dayId]} · ${day.focus}</span>
+    <div style="min-width:0"><span class="label-mono">${DAYNAME[dayId]} ${fechaCorta(fecha)} · ${day.focus}</span>
       <div class="h2" style="margin-top:3px">${e.name}</div></div>
     <button class="close-x" data-close>×</button></div>`;
   h+=`<div style="display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap">
@@ -1114,7 +1198,7 @@ function openExLog(dayId,idx){
     <div id="setsBox">${rows.map((s,si)=>setRowHTML(si,s.weight,s.reps)).join("")}</div>
     <button class="btn-secondary" id="addSet" style="width:100%;margin-top:4px">${IC.plus} Añadir serie</button>`;
   h+=`<button class="btn-primary" style="width:100%;margin-top:10px" id="saveLog">${prev?"Actualizar registro":"Guardar ejercicio"}</button>`;
-  if(prev)h+=`<button class="btn-danger" style="width:100%;margin-top:8px" id="delLog">Eliminar registro de hoy</button>`;
+  if(prev)h+=`<button class="btn-danger" style="width:100%;margin-top:8px" id="delLog">Eliminar registro ${esHoy?"de hoy":"del "+fechaCorta(fecha)}</button>`;
 
   const logs=(S.history||[]).filter(l=>l.exId===item.exId).sort((a,b)=>a.date<b.date?-1:1).slice(-8).reverse();
   if(logs.length){
@@ -1145,12 +1229,12 @@ function openExLog(dayId,idx){
     if(!out.length)return toast("Anota al menos una serie");
     const best=bestSet(out);
     if(prev){Object.assign(prev,{weight:best.weight,reps:best.reps,sets:out});}
-    else S.history.push({id:uid(),date:todayKey(),exId:item.exId,weight:best.weight,reps:best.reps,sets:out});
+    else S.history.push({id:uid(),date:fecha,exId:item.exId,weight:best.weight,reps:best.reps,sets:out});
     S.checks[checkKey(dayId,idx)]=true;
     save();closeSheet();renderHoy();
     toast(prev?"Registro actualizado":`${e.name} registrado`);
   };
-  const dl=$("#delLog");if(dl)dl.onclick=()=>confirmSheet({title:"Eliminar registro",message:`¿Borrar las series de hoy de "${e.name}"?`,cta:"Eliminar",danger:true,onConfirm:()=>{
+  const dl=$("#delLog");if(dl)dl.onclick=()=>confirmSheet({title:"Eliminar registro",message:`¿Borrar las series ${esHoy?"de hoy":"del "+fechaLarga(fecha)} de "${e.name}"?`,cta:"Eliminar",danger:true,onConfirm:()=>{
     S.history=S.history.filter(l=>l!==prev);save();closeSheet();renderHoy();toast("Registro eliminado");
   }});
 }
@@ -1327,7 +1411,7 @@ function openExercise(exId){
     <div style="min-width:0"><span class="label-mono">${e.group} · ${e.eq}</span><div class="h2" style="margin-top:3px">${e.name}</div></div>
     <button class="close-x" data-close>×</button></div>`;
   h+=`<div style="display:flex;gap:8px;margin:10px 0"><span class="chip">${e.sets} series</span><span class="chip">${e.reps} reps</span></div>`;
-  if(img)h+=`<img src="${img}" alt="${e.name}" style="width:100%;border-radius:16px;margin:10px 0;border:1px solid rgba(63,63,70,.4)" onerror="this.style.display='none'">`;
+  if(img)h+=`<img src="${img}" alt="${e.name}" style="width:100%;border-radius:16px;margin:10px 0;border:1px solid var(--brd)" onerror="this.style.display='none'">`;
   h+=muscleSVG(e.muscles);
   // progresión
   const logs=S.history.filter(l=>l.exId===exId);
@@ -1548,7 +1632,7 @@ function attendanceBlock(){
     if(iso===todayIso)cls+=" today";
     // el cuadrito no lleva número: el detalle del día sale al tocarlo (toast) o al pasar el cursor (title)
     const info=`${fechaLarga(iso)}${st.rest?" · descanso":st.trained?` · ${st.done}/${st.total} ejercicios`:future?" · pendiente":" · sin registro"}`;
-    cells+=`<div class="calcell ${cls}" data-cal="${info}" title="${info}"></div>`;
+    cells+=`<div class="calcell ${cls}" data-cal="${info}" data-iso="${iso}" title="${info}">${d}</div>`;
   }
   const pct=programados?Math.round(hechos/programados*100):0;
   const racha=currentStreak();
@@ -1561,12 +1645,13 @@ function attendanceBlock(){
       <button class="icon-btn" id="calPrev" title="Mes anterior" style="flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
       <button class="icon-btn" id="calNext" title="Mes siguiente" style="flex:none${isCur?";opacity:.35":""}" ${isCur?"disabled":""}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
     </div>
+    <div class="calhead">${DAYS.map(([,l])=>`<span>${l[0]}</span>`).join("")}</div>
     <div class="calgrid">${cells}</div>
     <div class="callegend">
       <span><i style="background:var(--emerald)"></i>Completo</span>
       <span><i style="background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35)"></i>A medias</span>
-      <span><i style="background:rgba(24,24,27,.6);border-color:rgba(251,113,133,.28)"></i>No fuiste</span>
-      <span><i style="background:rgba(24,24,27,.35);border-color:rgba(63,63,70,.25)"></i>Descanso</span>
+      <span><i style="background:var(--sup-2);border-color:rgba(251,113,133,.28)"></i>No fuiste</span>
+      <span><i style="background:var(--sup);border-color:var(--brd)"></i>Descanso</span>
     </div>`;
   h+=`<div style="display:flex;gap:10px;margin-top:14px">
     <div class="stat" style="flex:1;padding:12px 14px"><div class="label">Racha</div>
@@ -1574,7 +1659,7 @@ function attendanceBlock(){
     <div class="stat" style="flex:1;padding:12px 14px"><div class="label">Este mes</div>
       <div class="mono" style="font-size:20px;font-weight:800">${hechos}<small style="font-size:11px;color:var(--zinc-500);font-weight:700">${programados?" / "+programados:""}</small></div></div>
   </div>`;
-  h+=`<p class="muted" style="margin-top:12px;font-size:11px">Se marca solo: un día cuenta como entrenado en cuanto marcas un ejercicio o registras un peso. Toca un cuadrito para ver el día.</p></div>`;
+  h+=`<p class="muted" style="margin-top:12px;font-size:11px">Se marca solo: un día cuenta como entrenado en cuanto marcas un ejercicio o registras un peso. ¿Se te olvidó marcar un día? <b style="color:var(--zinc-400)">Tócalo en el calendario</b>: se abre en Hoy y lo que marques queda en esa fecha, aunque sea de semanas pasadas.</p></div>`;
   return h;
 }
 
@@ -1616,7 +1701,7 @@ function weightBlock(){
     if(Math.abs(delta)<=0.6){status="Vas en línea con tu meta";color="var(--emerald)";}
     else if((dir>=0&&delta>0)||(dir<0&&delta<0)){status="Vas adelantado a lo esperado";color="var(--sky)";}
     else{status="Vas un poco atrasado";color="var(--amber-250)";}
-    h+=`<div style="margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(24,24,27,.5);border:1px solid rgba(63,63,70,.35)">
+    h+=`<div style="margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--sup);border:1px solid var(--brd)">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span class="label">Esperado hoy · ${RATE_LABEL[g.rate]||g.rate}</span>
         <span class="mono" style="font-weight:800;color:var(--zinc-200)">${expected.toFixed(1)} kg</span></div>
@@ -1630,7 +1715,7 @@ function strengthBlock(){
   (S.history||[]).forEach(l=>{if(l.weight!=null)(byEx[l.exId]=byEx[l.exId]||[]).push(l);});
   const ids=Object.keys(byEx);
   if(!ids.length){
-    return `<div class="card" style="padding:24px;text-align:center"><div class="ei" style="margin:0 auto 12px;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:rgba(63,63,70,.2);border:1px solid rgba(63,63,70,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--zinc-500)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div><div class="h3" style="font-size:14px">Sin datos de fuerza aún</div><p class="sub" style="margin-top:6px">Tras entrenar, en <b style="color:var(--zinc-300)">Hoy</b> toca el botón de la derecha de cada ejercicio y anota tus series. Aquí verás cómo sube tu fuerza y tu próximo objetivo.</p></div>`;
+    return `<div class="card" style="padding:24px;text-align:center"><div class="ei" style="margin:0 auto 12px;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--sup);border:1px solid var(--brd)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--zinc-500)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div><div class="h3" style="font-size:14px">Sin datos de fuerza aún</div><p class="sub" style="margin-top:6px">Tras entrenar, en <b style="color:var(--zinc-300)">Hoy</b> toca el botón de la derecha de cada ejercicio y anota tus series. Aquí verás cómo sube tu fuerza y tu próximo objetivo.</p></div>`;
   }
   ids.sort((a,b)=>{const la=byEx[a],lb=byEx[b];return (lb[lb.length-1].date<la[la.length-1].date)?-1:1;});
   let h=`<div class="list-stagger">`;
@@ -1651,7 +1736,7 @@ function strengthBlock(){
       <div class="label" style="letter-spacing:.1em;margin-bottom:4px">Última sesión · serie por serie</div>
       ${setPills(last)}
       <div style="margin-top:10px">${sparkline(logs.map(l=>l.weight),"#34d399")}</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(63,63,70,.3)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--brd)">
         <div><div class="label" style="letter-spacing:.1em">1RM estimado</div><div class="mono" style="font-weight:700;font-size:13px;color:var(--zinc-300)">${e1rm} ${LB}</div></div>
         <div style="text-align:right"><div class="label" style="letter-spacing:.1em">Próximo objetivo</div><div class="mono" style="font-weight:700;font-size:13px;color:var(--zinc-100)">${sug}</div></div>
       </div>
@@ -1675,7 +1760,12 @@ function nextTargetObj(e,last){
   return {weight:last.weight,reps:(last.reps||0)+1};
 }
 function nextTarget(e,last){const o=nextTargetObj(e,last);return o?`${o.weight} ${LB} × ${o.reps}`:"—";}
-function lastEntry(exId){const l=(S.history||[]).filter(x=>x.exId===exId&&x.weight!=null).sort((a,b)=>a.date<b.date?-1:1);return l.length?l[l.length-1]:null;}
+/* Último registro del ejercicio. `antes` limita la búsqueda a fechas anteriores: al completar un
+   día pasado, el objetivo sugerido debe salir de la sesión previa a ESE día, no de una posterior. */
+function lastEntry(exId,antes){
+  const l=(S.history||[]).filter(x=>x.exId===exId&&x.weight!=null&&(!antes||x.date<antes)).sort((a,b)=>a.date<b.date?-1:1);
+  return l.length?l[l.length-1]:null;
+}
 function bindProgreso(){
   const shiftMonth=n=>{
     const now=new Date();
@@ -1686,7 +1776,13 @@ function bindProgreso(){
   };
   const cp=$("#calPrev");if(cp)cp.onclick=()=>shiftMonth(-1);
   const cn=$("#calNext");if(cn&&!cn.disabled)cn.onclick=()=>shiftMonth(1);
-  $("#v-progreso").querySelectorAll("[data-cal]").forEach(c=>c.onclick=()=>toast(c.dataset.cal));
+  /* Tocar un cuadrito abre ESE día en Hoy para poder completarlo (aunque sea de otra semana).
+     Los días que aún no llegan no se abren: solo muestran su detalle. */
+  $("#v-progreso").querySelectorAll("[data-cal]").forEach(c=>c.onclick=()=>{
+    const iso=c.dataset.iso;
+    if(iso>dateOfDay("dom",0))return toast(c.dataset.cal);
+    openDate(iso);
+  });
   $("#v-progreso").querySelectorAll("[data-mz]").forEach(z=>z.onclick=()=>openMeasureZone(z.dataset.mz));
   /* Plegar/desplegar se hace sobre el DOM ya pintado, no re-renderizando: si la clase
      "open" llegara puesta desde el render, el navegador no tendría de dónde animar. */
@@ -2166,7 +2262,11 @@ function mealPlanHTML(kcal,protein){
 const VIEWS=[["hoy","Hoy"],["progreso","Progreso"],["rutinas","Rutinas"],["ejercicios","Ejercicios"],["nutricion","Nutrición"]];
 function renderDock(){
   $("#dock").innerHTML=VIEWS.map(([id,l])=>`<button class="dock-btn${id===curView?" on":""}" data-view="${id}">${IC[id]}<span class="dl">${l}</span></button>`).join("");
-  $("#dock").querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>go(b.dataset.view));
+  // El botón Hoy del dock siempre lleva a hoy, aunque se estuviera viendo otra semana.
+  $("#dock").querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{
+    if(b.dataset.view==="hoy"){weekOffset=0;selectedDay=jsDayToId();}
+    go(b.dataset.view);
+  });
 }
 function go(v){
   curView=v;
