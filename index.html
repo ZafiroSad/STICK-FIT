@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#15161b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -39,6 +39,14 @@
   --ease:cubic-bezier(.16,1,.3,1);
   --suave:cubic-bezier(.4,0,.2,1);
   --resorte:cubic-bezier(.34,1.56,.64,1);
+  /* Presupuesto de duracion por gesto (STICK_UI_SYSTEM.md §2.9) — toda
+     animacion de UI vive bajo 300ms; esto le pone NUMEROS a cada gesto
+     para que un hover no dure lo mismo que un panel. */
+  --t-toque:140ms; --t-hover:180ms; --t-menu:220ms; --t-panel:300ms; --t-lienzo:420ms;
+  /* Resplandor de signo — el mismo lenguaje que .gain/.loss (§2.1). */
+  --glow-gain:0 0 6px rgba(52,211,153,.55);
+  --glow-loss:0 0 6px rgba(251,113,133,.5);
+  --glow-amber:0 0 6px rgba(251,191,36,.5);
 
   /* Vidrio liquido */
   --v-fondo:linear-gradient(148deg,rgba(255,255,255,.085) 0%,rgba(255,255,255,.028) 44%,rgba(255,255,255,.055) 100%);
@@ -79,6 +87,9 @@ html.light{
   --v-sombra:0 18px 46px -24px rgba(21,22,27,.30);
   --linea:rgba(21,22,27,.10); --linea-fuerte:rgba(21,22,27,.24);
 
+  --glow-gain:0 0 5px rgba(5,150,105,.3);
+  --glow-loss:0 0 5px rgba(225,29,72,.28);
+  --glow-amber:0 0 5px rgba(180,120,10,.32);
   --masa-1:hsl(214 42% 62% / .20); --masa-2:hsl(32 56% 64% / .17);
   --masa-3:hsl(28 34% 58% / .14);  --masa-4:hsl(196 40% 60% / .14);
   --masa-op:.70; --grano-op:.030;
@@ -121,12 +132,15 @@ html.light .campo{background:radial-gradient(130% 85% at 50% -12%,rgba(21,22,27,
 .lienzo{position:relative;z-index:1}
 
 /* ── Toggle de modo claro (obligatorio, 10) ── */
-.btn-tema{width:32px;height:32px;border-radius:999px;background:var(--v-fondo);
+/* Boton-icono canonico de la familia (STICK_UI_SYSTEM.md §4.3): 40px de
+   diametro en tactil — el minimo comodo para un objetivo aislado — y 36px
+   en escritorio desde 640px. A 32px el dedo fallaba el blanco. */
+.btn-tema{width:40px;height:40px;border-radius:999px;background:var(--v-fondo);
   backdrop-filter:var(--v-blur);-webkit-backdrop-filter:var(--v-blur);
   border:1px solid var(--v-borde);box-shadow:var(--v-filo);
   color:var(--zinc-500);display:flex;align-items:center;justify-content:center;cursor:pointer;
   transition:color .3s var(--suave),border-color .3s var(--suave),transform .35s var(--resorte)}
-.btn-tema:hover{color:var(--tinta);border-color:var(--linea-fuerte);transform:translateY(-2px)}
+
 .btn-tema:active{transform:scale(.95)}
 .btn-tema .luna{display:none}
 html.light .btn-tema .sol{display:none}
@@ -170,9 +184,8 @@ button,input,select,textarea{font-family:inherit}
   box-shadow:var(--v-filo),var(--v-sombra);
   transition:border-color .45s var(--ease),box-shadow .45s var(--ease),transform .45s var(--ease);
 }
-.card.hoverable:hover{border-color:var(--linea-fuerte);transform:translateY(-3px);
-  box-shadow:var(--v-filo),0 30px 70px -28px rgba(0,0,0,.92)}
-html.light .card.hoverable:hover{box-shadow:var(--v-filo),0 26px 56px -26px rgba(21,22,27,.34)}
+
+
 .card.tap{cursor:pointer}
 .card.tap:active{transform:scale(.985)}
 
@@ -194,7 +207,7 @@ html.light .card.hoverable:hover{box-shadow:var(--v-filo),0 26px 56px -26px rgba
   transition:transform .35s var(--resorte),background .2s var(--suave),box-shadow .35s var(--suave);
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
 }
-.btn-primary:hover{background:var(--zinc-100);transform:translateY(-3px);box-shadow:0 18px 40px -16px rgba(0,0,0,.85)}
+
 .btn-primary:active{transform:translateY(-1px) scale(.985);box-shadow:none}
 .btn-primary:disabled{background:var(--zinc-800);color:var(--zinc-600);cursor:not-allowed;box-shadow:none}
 .btn-secondary{
@@ -204,7 +217,7 @@ html.light .card.hoverable:hover{box-shadow:var(--v-filo),0 26px 56px -26px rgba
   transition:transform .35s var(--resorte),border-color .25s var(--suave),box-shadow .35s var(--suave);
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
 }
-.btn-secondary:hover{border-color:var(--linea-fuerte);transform:translateY(-2px);box-shadow:var(--v-filo),0 18px 40px -22px rgba(0,0,0,.85)}
+
 .btn-secondary:active{transform:scale(.97)}
 .btn-danger{
   background:rgba(251,113,133,.08);color:var(--rose);border:1px solid rgba(251,113,133,.20);
@@ -212,7 +225,7 @@ html.light .card.hoverable:hover{box-shadow:var(--v-filo),0 26px 56px -26px rgba
   letter-spacing:.05em;cursor:pointer;transition:all .2s var(--ease);
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
 }
-.btn-danger:hover{background:rgba(251,113,133,.16);transform:translateY(-2px)}
+
 .icon-btn{
   width:36px;height:36px;border-radius:999px;background:var(--v-fondo);
   backdrop-filter:var(--v-blur);-webkit-backdrop-filter:var(--v-blur);
@@ -220,7 +233,7 @@ html.light .card.hoverable:hover{box-shadow:var(--v-filo),0 26px 56px -26px rgba
   display:inline-flex;align-items:center;justify-content:center;
   transition:color .3s var(--suave),border-color .3s var(--suave),transform .35s var(--resorte);flex:none;
 }
-.icon-btn:hover{color:var(--tinta);border-color:var(--linea-fuerte);transform:translateY(-2px)}
+
 .icon-btn:active{transform:scale(.92)}
 
 /* ── Campos de formulario ── */
@@ -253,14 +266,16 @@ html.light .chip{background:rgba(255,255,255,.72)}
 
 /* ============ Shell ============ */
 #app{display:none;min-height:100vh;padding-bottom:120px}
+/* El header ya NO es una barra sticky con superficie y borde propios: flota
+   sobre el campo igual que el resto del contenido y se desplaza con la
+   pagina (STICK_UI_SYSTEM.md §4.3, patron de STICK BUDGETS). El
+   padding-top suma la safe area para no quedar bajo la isla dinamica. */
 header.top{
-  position:sticky;top:0;z-index:40;background:color-mix(in srgb, var(--bg) 55%, transparent);
-  backdrop-filter:blur(20px) saturate(160%);
-  -webkit-backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid var(--linea);
-  padding-top:env(safe-area-inset-top);
+  position:relative;z-index:2;background:none;border-bottom:none;
+  padding-top:calc(env(safe-area-inset-top) + 2rem);
 }
-.top-inner{height:60px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 18px;max-width:520px;margin:0 auto}
+.top-inner{display:flex;align-items:center;justify-content:space-between;
+  gap:14px;padding:0 20px 20px;max-width:520px;margin:0 auto}
 .brand{display:flex;align-items:center;gap:10px}
 .brand .mark{width:34px;height:34px;border-radius:11px;
   background:linear-gradient(140deg,#26262b,#141418);border:1px solid var(--brd);
@@ -268,34 +283,57 @@ header.top{
 .logo-mark{display:block;overflow:visible}
 .brand .name{font-size:14px;font-weight:700;letter-spacing:.02em;color:var(--tinta)}
 .brand .name b{color:var(--zinc-400);font-weight:700}
-main{max-width:520px;margin:0 auto;padding:18px 16px 0}
+main{max-width:520px;margin:0 auto;padding:0 20px}
+@media (min-width:640px){ .btn-tema{width:36px;height:36px} .icon-btn{width:36px;height:36px} }
 .view{display:none}
 .view.on{display:block}
 .view-head{margin-bottom:16px}
 .section-gap{margin-top:22px}
 
 /* ── Dock ── */
+/* Navegacion inferior canonica de la familia (STICK_UI_SYSTEM.md §4.5):
+   dock de vidrio CENIDO a su contenido (no un 92% del ancho) y UNA sola
+   pildora blanca que VIAJA entre pestanas. `translate3d` con eje Z (aunque
+   sea 0) manda la barra a su propia capa de composicion en la GPU: sin eso,
+   un `fixed` con `backdrop-filter` se desprende durante el scroll rapido en
+   Safari de iOS. */
 nav.dock{
-  position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
-  z-index:50;display:flex;align-items:center;justify-content:space-between;gap:2px;
-  height:62px;padding:0 12px;width:92%;max-width:384px;border-radius:999px;
+  position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;
+  transform:translate3d(-50%,0,0);will-change:transform;
+  z-index:50;display:flex;align-items:center;gap:4px;
+  padding:6px;border-radius:999px;
   background:color-mix(in srgb, var(--bg) 72%, transparent);backdrop-filter:blur(40px) saturate(180%);
-  -webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,.07);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.2),
+  -webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,.09);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),inset 0 -1px 0 rgba(0,0,0,.2),
     0 16px 48px rgba(0,0,0,.55),0 4px 16px rgba(0,0,0,.3);
 }
-/* Dock canónico: la pestaña activa muestra label en píldora; las demás, solo ícono. */
-.dock-btn{padding:10px;border:1px solid transparent;background:transparent;cursor:pointer;
+html.light nav.dock{
+  background:color-mix(in srgb, #ffffff 80%, transparent);border-color:rgba(21,22,27,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 16px 40px rgba(21,22,27,.14),0 4px 14px rgba(21,22,27,.08);
+}
+/* La pildora es UN solo elemento que se desplaza: sin esto, el fondo
+   desaparecia de una pestana y reaparecia en otra, y la barra se sentia
+   como botones sueltos en vez de un control con posicion actual. El JS
+   solo escribe --px (posicion) y --pw (ancho); el muelle lo pone el CSS. */
+.dock-pildora{
+  position:absolute;top:6px;bottom:6px;left:0;border-radius:999px;
+  background:var(--tinta);pointer-events:none;
+  width:var(--pw,0px);transform:translate3d(var(--px,0px),0,0);
+  transition:transform .45s var(--resorte),width .45s var(--resorte);
+}
+.dock-btn{position:relative;z-index:1;padding:10px 16px;border:none;background:transparent;cursor:pointer;
   border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;
-  color:var(--zinc-500);transition:color .2s var(--ease),background .2s var(--ease),
-  border-color .2s var(--ease),padding .2s var(--ease),transform .2s var(--ease)}
-.dock-btn svg{width:19px;height:19px;stroke-width:1.75}
-.dock-btn .dl{display:none;font-size:11px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
-.dock-btn:hover{color:var(--zinc-300)}
-.dock-btn.on{color:var(--tinta);background:color-mix(in srgb, var(--tinta) 10%, transparent);border-color:var(--linea);padding:8px 16px}
-.dock-btn.on svg{stroke-width:2}
+  color:var(--zinc-400);transition:color .15s var(--suave)}
+.dock-btn svg{width:16px;height:16px;stroke-width:2.4}
+.dock-btn .dl{display:none;font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;white-space:nowrap}
+.dock-btn.on{color:var(--contratinta)}
 .dock-btn.on .dl{display:inline}
-.dock-btn:active{transform:scale(.95)}
+/* Las etiquetas solo desde 640px (el mismo corte `sm:` que usa STICK
+   BUDGETS): con 5 pestanas y sus nombres, el dock mide ~574px y por debajo
+   de ese ancho se desbordaria de la pantalla. */
+@media (min-width:640px){ .dock-btn .dl{display:inline} }
+@media (prefers-reduced-motion:reduce){ .dock-pildora{transition:none} }
 
 /* ── Ejercicio row (checklist) ── */
 .ex{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;
@@ -332,7 +370,7 @@ html.light .ex-target{background:rgba(255,255,255,.80)}
   background:rgba(255,255,255,.06);border:1px solid var(--v-borde);border-radius:18px;
   padding:2px;font-family:inherit;color:var(--zinc-350);transition:.2s var(--ease)}
 html.light .ex-log{background:rgba(255,255,255,.78)}
-.ex-log:hover{background:rgba(255,255,255,.10);border-color:var(--linea-fuerte);color:var(--tinta)}
+
 .ex-log:active{transform:scale(.96)}
 .ex-log .elv{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;
   line-height:1.1;display:inline-flex;align-items:center;justify-content:center;gap:3px}
@@ -357,6 +395,7 @@ html.light .ex-log.logged{background:rgba(5,150,105,.10);border-color:rgba(5,150
 .calcell.rest{background:var(--sup);border-color:var(--brd);color:var(--zinc-600)}
 .calcell.miss{background:var(--sup-2);border-color:rgba(251,113,133,.28);color:rgba(251,113,133,.75)}
 .calcell.part{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35);color:var(--emerald)}
+.calcell.free{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.38);color:var(--sky)}
 .calcell.full{background:var(--emerald);border-color:var(--emerald);color:#06281c}
 .calcell.fut{opacity:.4}
 .calcell.today{box-shadow:0 0 0 2px rgba(255,255,255,.55)}
@@ -440,14 +479,35 @@ html.light .daypill.on{background:var(--tinta);border-color:var(--tinta)}
 .daypill.rest{opacity:.55}
 .daypill .dot{position:absolute;top:6px;right:7px;width:7px;height:7px;border-radius:50%;
   background:var(--emerald);opacity:0;transition:.2s}
-.daypill.complete .dot{opacity:1}
-.daypill.on.complete .dot{background:var(--contratinta)}
+/* Sesion libre: punto azul. La rutina completa manda sobre ella, por eso .complete va despues. */
+.daypill.free .dot{opacity:1;background:var(--sky)}
+.daypill.complete .dot{opacity:1;background:var(--emerald)}
+.daypill.on.complete .dot,.daypill.on.free .dot{background:var(--contratinta)}
+
+/* ── Sesión libre (entrené, pero no la rutina) ── */
+.freecard{display:flex;align-items:center;gap:12px;padding:14px 15px;border-radius:18px;margin-top:12px;
+  cursor:pointer;background:rgba(255,255,255,.05);border:1px solid var(--v-borde);transition:.2s var(--ease)}
+html.light .freecard{background:rgba(255,255,255,.72)}
+.freecard:active{transform:scale(.99)}
+.freecard.on{background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.32)}
+html.light .freecard.on{background:rgba(2,132,199,.09);border-color:rgba(2,132,199,.30)}
+.freecard .fc-ico{width:38px;height:38px;flex:none;border-radius:12px;display:grid;place-items:center;
+  background:var(--sup-2);border:1px solid var(--brd);color:var(--zinc-400)}
+.freecard.on .fc-ico{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.30);color:var(--sky)}
+.fchips{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 16px}
+.fchip{padding:8px 13px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;
+  background:rgba(255,255,255,.06);border:1px solid var(--v-borde);color:var(--zinc-300);
+  transition:.18s var(--ease)}
+html.light .fchip{background:rgba(255,255,255,.72)}
+.fchip:active{transform:scale(.95)}
+.fchip.sel{background:rgba(56,189,248,.14);border-color:rgba(56,189,248,.38);color:var(--sky)}
+html.light .fchip.sel{background:rgba(2,132,199,.12);border-color:rgba(2,132,199,.36);color:var(--sky)}
 
 /* ── Catálogo ejercicios ── */
 .cat-group{margin-bottom:18px}
 .cat-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;
   background:var(--sup);border:1px solid var(--brd);margin-bottom:7px;transition:.2s}
-.cat-item:hover{border-color:rgba(82,82,91,.6);background:var(--sup-2)}
+
 .cat-item:active{transform:scale(.99)}
 .mg-ico{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
   background:var(--sup-2);border:1px solid var(--brd)}
@@ -465,7 +525,7 @@ html.light .daypill.on{background:var(--tinta);border-color:var(--tinta)}
 .sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px}
 .close-x{width:32px;height:32px;border-radius:999px;background:var(--sup-2);border:none;color:var(--zinc-400);
   cursor:pointer;font-size:18px;display:grid;place-items:center;flex:none;transition:.2s}
-.close-x:hover{color:var(--tinta);background:rgba(255,255,255,.10)}
+
 
 /* ── Diagrama muscular ── */
 .muscle-wrap{display:flex;gap:18px;justify-content:center;padding:16px 14px 12px;border-radius:16px;
@@ -556,7 +616,7 @@ html.light .stat{background:rgba(255,255,255,.72)}
 .hrow .hv{font-size:16px;font-weight:800;color:var(--tinta);min-width:72px}
 .hrow .hg{flex:1;font-size:12px;font-weight:700;color:var(--zinc-450)}
 .hrow .ha{display:flex;gap:6px;flex-shrink:0}
-.hrow .ha .icon-btn:hover{color:var(--tinta)}
+
 .mchip{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;
   background:rgba(255,255,255,.06);border:1px solid var(--v-borde);font-size:11px;color:var(--zinc-400)}
 html.light .mchip{background:rgba(255,255,255,.76)}
@@ -583,6 +643,25 @@ html.light .mchip{background:rgba(255,255,255,.76)}
   font-variant-numeric:tabular-nums;color:var(--zinc-300)}
 .setpill i{font-style:normal;font-size:9px;font-weight:800;color:var(--zinc-550)}
 .setpill.best{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.3);color:var(--emerald)}
+
+/* ── Hover solo con puntero fino (STICK_UI_SYSTEM.md §7.0 bis) ──────
+   En tactil el navegador dispara un hover falso al tocar y el elemento
+   se queda levantado hasta que se toca otra cosa: se lee como un bug.
+   Estas reglas se agrupan al final para conservar su peso de cascada. */
+@media (hover: hover) and (pointer: fine) {
+  .btn-tema:hover{color:var(--tinta);border-color:var(--linea-fuerte);transform:translateY(-2px)}
+  .card.hoverable:hover{border-color:var(--linea-fuerte);transform:translateY(-3px);
+    box-shadow:var(--v-filo),0 30px 70px -28px rgba(0,0,0,.92)}
+  html.light .card.hoverable:hover{box-shadow:var(--v-filo),0 26px 56px -26px rgba(21,22,27,.34)}
+  .btn-primary:hover{background:var(--zinc-100);transform:translateY(-3px);box-shadow:0 18px 40px -16px rgba(0,0,0,.85)}
+  .btn-secondary:hover{border-color:var(--linea-fuerte);transform:translateY(-2px);box-shadow:var(--v-filo),0 18px 40px -22px rgba(0,0,0,.85)}
+  .btn-danger:hover{background:rgba(251,113,133,.16);transform:translateY(-2px)}
+  .icon-btn:hover{color:var(--tinta);border-color:var(--linea-fuerte);transform:translateY(-2px)}
+  .ex-log:hover{background:rgba(255,255,255,.10);border-color:var(--linea-fuerte);color:var(--tinta)}
+  .cat-item:hover{border-color:rgba(82,82,91,.6);background:var(--sup-2)}
+  .close-x:hover{color:var(--tinta);background:rgba(255,255,255,.10)}
+  .hrow .ha .icon-btn:hover{color:var(--tinta)}
+}
 </style>
 </head>
 <body>
@@ -878,6 +957,7 @@ function load(){
       }
       raw.weightLog=raw.weightLog||[];
       raw.measures=raw.measures||[];
+      raw.free=raw.free||{}; // sesiones libres (entrenó, pero no la rutina); clave = fecha ISO
       if(raw.weightGoal===undefined)raw.weightGoal=null;
       // migración: las cargas de fuerza pasan de kg a lb (el peso corporal y la nutrición siguen en kg)
       if(raw.liftUnit!=="lb"){
@@ -902,7 +982,7 @@ function load(){
     }
   }catch(e){}
   return {onboarded:false,seedVersion:SEED_VERSION,activeRoutineId:SEED_ROUTINE.id,routines:[structuredClone(SEED_ROUTINE)],
-    customEx:[],imgUrls:{},checks:{},history:[],profile:null,weightLog:[],weightGoal:null,measures:[],liftUnit:"lb",measureSchema:2};
+    customEx:[],imgUrls:{},checks:{},free:{},history:[],profile:null,weightLog:[],weightGoal:null,measures:[],liftUnit:"lb",measureSchema:2};
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(S));}
 function allEx(){return [...SEED_EX,...(S.customEx||[])];}
@@ -991,6 +1071,17 @@ function muscleSVG(active){
    ============================================================ */
 function checkKey(dayId,exIdx){return `${dateOfDay(dayId)}|${dayId}|${exIdx}`;}
 function isChecked(dayId,exIdx){return !!S.checks[checkKey(dayId,exIdx)];}
+/* ---------- Sesión libre ----------
+   Entrenar sin seguir la rutina (con un amigo, una rutina exprés, un partido) no se puede
+   deducir de los checks ni del historial de cargas: es información nueva, así que vive en su
+   propia clave `S.free[fecha] = etiqueta`. Es lo único de la asistencia que el usuario declara
+   a mano; todo lo demás se sigue derivando. */
+const FREE_PRESETS=["Con un amigo","Rutina exprés","Cardio","Deporte","Otro gimnasio","Caminata"];
+function freeOf(iso){return (S.free||{})[iso]||null;}
+/* La etiqueta se pinta dentro de atributos HTML (title, data-cal); se limpia aquí, en el único
+   punto por donde entra, en vez de escapar en cada sitio donde se muestra. */
+function setFree(iso,label){S.free=S.free||{};S.free[iso]=String(label).replace(/[<>"&]/g,"").trim()||"Sesión libre";save();}
+function clearFree(iso){if(S.free)delete S.free[iso];save();}
 function dayProgress(dayId){
   const day=activeRoutine().days[dayId];
   if(!day||day.rest||!day.exercises.length)return 0;
@@ -1033,7 +1124,8 @@ function renderHoy(){
   h+=`<div class="week">`+DAYS.map(([id,lbl])=>{
     const dd=r.days[id];const pct=dayProgress(id);
     const dnum=+dateOfDay(id).split("-")[2];
-    return `<div class="daypill${id===selectedDay?" on":""}${dd.rest?" rest":""}${pct===100?" complete":""}" data-day="${id}">
+    const lib=!!freeOf(dateOfDay(id));
+    return `<div class="daypill${id===selectedDay?" on":""}${dd.rest?" rest":""}${lib?" free":""}${pct===100?" complete":""}" data-day="${id}">
       <span class="dot"></span><div class="dw">${lbl} ${dnum}</div><div class="df">${dd.rest?"Rest":dd.focus.replace(/ [AB]$/,"")}</div></div>`;
   }).join("")+`</div>`;
   /* Lo que se marque queda guardado en la fecha del día elegido, no en la de hoy: conviene
@@ -1053,6 +1145,7 @@ function renderHoy(){
       <div class="h3">Día de descanso</div>
       <p class="sub" style="margin-top:8px;max-width:300px;margin-left:auto;margin-right:auto">La recuperación es donde el músculo crece. Duerme 7-9 h, hidrátate y muévete ligero.</p>
     </div>`;
+    h+=freeSessionCard(fechaSel);
     $("#v-hoy").innerHTML=h;bindHoy();return;
   }
 
@@ -1087,7 +1180,51 @@ function renderHoy(){
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5"/></svg>Reiniciar día
     </button>
   </div></div>`;
+  h+=freeSessionCard(fechaSel);
   $("#v-hoy").innerHTML=h;bindHoy();
+}
+/* Tarjeta de "entrené por fuera". Aparece en todos los días —también en los de descanso, que es
+   justo cuando más se usa— y guarda la sesión en la fecha que se esté viendo, igual que los checks. */
+function freeSessionCard(iso){
+  const lib=freeOf(iso);
+  return `<div class="freecard${lib?" on":""}" id="freeCard" data-iso="${iso}">
+    <div class="fc-ico">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        ${lib?`<path d="M20 6L9 17l-5-5"/>`:`<path d="M12 5v14M5 12h14"/>`}</svg></div>
+    <div style="flex:1;min-width:0">
+      <div class="h3" style="font-size:13px">${lib?"Entrenaste por fuera":"Entrené, pero no la rutina"}</div>
+      <div class="sub" style="font-size:11px;margin-top:2px${lib?";color:var(--sky)":""}">${lib?lib:"Con un amigo, una rutina exprés, un partido…"}</div>
+    </div>
+    <span style="flex:none;color:var(--zinc-500)">${IC.chevron}</span></div>`;
+}
+/* Hoja de la sesión libre: pastillas rápidas + campo libre. La etiqueta es solo descriptiva;
+   lo que cuenta para la asistencia es que la fecha exista en S.free. */
+function openFreeSheet(iso){
+  const cur=freeOf(iso);
+  openSheet2(`<div class="sheet-grab"></div>
+    <div class="sheet-head"><div>
+      <div class="h2">Entrené por fuera</div>
+      <div class="sub" style="font-size:11px;margin-top:3px">${fechaLarga(iso)}</div>
+    </div><button class="close-x" data-close>×</button></div>
+    <p class="sub" style="margin:10px 0 0;font-size:12px">Cuenta el día como entrenado sin marcar la rutina. ¿Qué hiciste?</p>
+    <div class="fchips">${FREE_PRESETS.map(p=>`<button class="fchip${cur===p?" sel":""}" data-fc="${p}">${p}</button>`).join("")}</div>
+    <div class="field"><label>Descripción</label>
+      <input type="text" id="fs-input" maxlength="40" value="${(cur||"").replace(/"/g,"&quot;")}" placeholder="Sesión libre"></div>
+    <div style="display:flex;gap:8px">
+      ${cur?`<button class="btn-danger" style="flex:1" id="fs-del">Quitar</button>`:""}
+      <button class="btn-primary" style="flex:${cur?"1.4":"1"}" id="fs-save">${cur?"Guardar cambios":"Marcar como entrenado"}</button>
+    </div>`);
+  const inp=$("#fs-input");
+  $("#sheet2").querySelectorAll("[data-fc]").forEach(b=>b.onclick=()=>{
+    $("#sheet2").querySelectorAll("[data-fc]").forEach(x=>x.classList.remove("sel"));
+    b.classList.add("sel");inp.value=b.dataset.fc;
+  });
+  $("#fs-save").onclick=()=>{
+    setFree(iso,inp.value.trim()||"Sesión libre");
+    closeSheet2();renderHoy();toast("Día marcado como entrenado");
+    try{if(navigator.vibrate)navigator.vibrate(15);}catch(_){}
+  };
+  const del=$("#fs-del");if(del)del.onclick=()=>{clearFree(iso);closeSheet2();renderHoy();toast("Sesión libre quitada");};
 }
 /* Aviso de medidas en Hoy: solo aparece cuando ya toca según la meta (o si nunca se han tomado).
    Es el "recuerda" del ciclo de medidas; el detalle vive en Progreso. */
@@ -1124,6 +1261,7 @@ function setCheck(i,done){
 }
 function bindHoy(){
   const mn=$("#measNotice");if(mn)mn.onclick=()=>{mzOpen=true;go("progreso");}; // el aviso lleva a la tarjeta ya abierta
+  const fc=$("#freeCard");if(fc)fc.onclick=()=>openFreeSheet(fc.dataset.iso);
   const wp=$("#wkPrev");if(wp)wp.onclick=()=>{weekOffset++;renderHoy();};
   const wn=$("#wkNext");if(wn&&!wn.disabled)wn.onclick=()=>{weekOffset=Math.max(0,weekOffset-1);renderHoy();};
   const wt=$("#wkToday");if(wt)wt.onclick=()=>{weekOffset=0;selectedDay=jsDayToId();renderHoy();};
@@ -1597,14 +1735,18 @@ function dayStats(iso){
   const pre=iso+"|";
   Object.keys(S.checks||{}).forEach(k=>{if(S.checks[k]&&k.indexOf(pre)===0)done++;});
   const logged=(S.history||[]).some(l=>l.date===iso);
-  return {rest,total,done,logged,trained:done>0||logged,
+  const free=freeOf(iso);
+  const routine=done>0||logged;
+  return {rest,total,done,logged,free,routine,trained:routine||!!free,
     full:total>0&&done>=total};
 }
 function currentStreak(){
   const d=new Date();let n=0;
   for(let i=0;i<400;i++){
     const st=dayStats(isoOf(d));
-    if(!st.rest){
+    if(st.rest){
+      if(st.trained)n++;   // entrenar en un día de descanso suma sesión, pero no fuerza a nada
+    }else{
       if(st.trained)n++;
       else if(i>0)break;   // hoy pendiente no rompe la racha
     }
@@ -1625,13 +1767,17 @@ function attendanceBlock(){
     const iso=isoOf(new Date(y,m,d));
     const st=dayStats(iso);
     const future=iso>todayIso;
-    if(!st.rest&&!future)programados++;
+    /* Un día de descanso en el que sí entrenaste entra también en el denominador: si no, el
+       porcentaje de cumplimiento se pasaría del 100 %. */
+    if(!future&&(!st.rest||st.trained))programados++;
     if(st.trained)hechos++;
-    let cls=st.trained?(st.full?"full":"part"):(st.rest?"rest":(future?"":"miss"));
+    let cls=st.trained?(st.full?"full":(st.routine?"part":"free")):(st.rest?"rest":(future?"":"miss"));
     if(future)cls+=" fut";
     if(iso===todayIso)cls+=" today";
-    // el cuadrito no lleva número: el detalle del día sale al tocarlo (toast) o al pasar el cursor (title)
-    const info=`${fechaLarga(iso)}${st.rest?" · descanso":st.trained?` · ${st.done}/${st.total} ejercicios`:future?" · pendiente":" · sin registro"}`;
+    const detalle=st.rest&&!st.trained?" · descanso"
+      :st.trained?(st.routine?` · ${st.done}/${st.total} ejercicios`:"")+(st.free?` · libre: ${st.free}`:"")
+      :future?" · pendiente":" · sin registro";
+    const info=`${fechaLarga(iso)}${detalle}`;
     cells+=`<div class="calcell ${cls}" data-cal="${info}" data-iso="${iso}" title="${info}">${d}</div>`;
   }
   const pct=programados?Math.round(hechos/programados*100):0;
@@ -1650,6 +1796,7 @@ function attendanceBlock(){
     <div class="callegend">
       <span><i style="background:var(--emerald)"></i>Completo</span>
       <span><i style="background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.35)"></i>A medias</span>
+      <span><i style="background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.38)"></i>Libre</span>
       <span><i style="background:var(--sup-2);border-color:rgba(251,113,133,.28)"></i>No fuiste</span>
       <span><i style="background:var(--sup);border-color:var(--brd)"></i>Descanso</span>
     </div>`;
@@ -1659,7 +1806,7 @@ function attendanceBlock(){
     <div class="stat" style="flex:1;padding:12px 14px"><div class="label">Este mes</div>
       <div class="mono" style="font-size:20px;font-weight:800">${hechos}<small style="font-size:11px;color:var(--zinc-500);font-weight:700">${programados?" / "+programados:""}</small></div></div>
   </div>`;
-  h+=`<p class="muted" style="margin-top:12px;font-size:11px">Se marca solo: un día cuenta como entrenado en cuanto marcas un ejercicio o registras un peso. ¿Se te olvidó marcar un día? <b style="color:var(--zinc-400)">Tócalo en el calendario</b>: se abre en Hoy y lo que marques queda en esa fecha, aunque sea de semanas pasadas.</p></div>`;
+  h+=`<p class="muted" style="margin-top:12px;font-size:11px">Se marca solo: un día cuenta como entrenado en cuanto marcas un ejercicio o registras un peso. ¿Entrenaste sin seguir la rutina? En <b style="color:var(--zinc-400)">Hoy</b>, la tarjeta <b style="color:var(--sky)">"Entrené, pero no la rutina"</b> marca el día en azul. ¿Se te olvidó marcar un día? <b style="color:var(--zinc-400)">Tócalo en el calendario</b>: se abre en Hoy y lo que marques queda en esa fecha, aunque sea de semanas pasadas.</p></div>`;
   return h;
 }
 
@@ -2260,13 +2407,47 @@ function mealPlanHTML(kcal,protein){
    NAVEGACIÓN + INIT
    ============================================================ */
 const VIEWS=[["hoy","Hoy"],["progreso","Progreso"],["rutinas","Rutinas"],["ejercicios","Ejercicios"],["nutricion","Nutrición"]];
-function renderDock(){
-  $("#dock").innerHTML=VIEWS.map(([id,l])=>`<button class="dock-btn${id===curView?" on":""}" data-view="${id}">${IC[id]}<span class="dl">${l}</span></button>`).join("");
+/* El dock se construye UNA sola vez y despues solo se mueve la pildora.
+   Antes se reescribia el innerHTML entero en cada cambio de vista: con eso
+   la pildora se destruia y volvia a nacer en su nuevo sitio, que es
+   justamente el efecto que el sistema no quiere (STICK_UI_SYSTEM.md §4.5 —
+   una sola pildora que VIAJA, como el `layoutId` de las apps React). */
+function montarDock(){
+  const dock=$("#dock");
+  dock.innerHTML='<span class="dock-pildora" id="dockPildora"></span>'+
+    VIEWS.map(([id,l])=>`<button class="dock-btn${id===curView?" on":""}" data-view="${id}" title="${l}" aria-label="${l}">${IC[id]}<span class="dl">${l}</span></button>`).join("");
   // El botón Hoy del dock siempre lleva a hoy, aunque se estuviera viendo otra semana.
-  $("#dock").querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{
+  dock.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{
     if(b.dataset.view==="hoy"){weekOffset=0;selectedDay=jsDayToId();}
     go(b.dataset.view);
   });
+  // Al cambiar de ancho (girar el telefono, abrir/cerrar teclado) las
+  // etiquetas aparecen o desaparecen y los botones cambian de ancho: la
+  // pildora tiene que volver a medirse o queda corrida.
+  window.addEventListener("resize",()=>renderDock(true),{passive:true});
+  renderDock(true);
+}
+function renderDock(inmediato){
+  const dock=$("#dock");if(!dock)return;
+  const pildora=$("#dockPildora");if(!pildora)return;
+  let activo=null;
+  dock.querySelectorAll("[data-view]").forEach(b=>{
+    const on=b.dataset.view===curView;
+    b.classList.toggle("on",on);
+    b.setAttribute("aria-current",on?"page":"false");
+    if(on)activo=b;
+  });
+  if(!activo)return;
+  // Con `#app` todavia en display:none (portada), todo mide 0: colocar la
+  // pildora ahi la dejaria naciendo en el borde izquierdo. Se sale y ya se
+  // volvera a llamar al mostrar la app.
+  if(activo.offsetWidth===0)return;
+  // La primera colocacion va sin transicion: si no, la pildora entra
+  // volando desde el borde izquierdo la primera vez que carga la app.
+  if(inmediato){pildora.style.transition="none";}
+  pildora.style.setProperty("--px",activo.offsetLeft+"px");
+  pildora.style.setProperty("--pw",activo.offsetWidth+"px");
+  if(inmediato){void pildora.offsetWidth;pildora.style.transition="";}
 }
 function go(v){
   curView=v;
@@ -2317,12 +2498,12 @@ function toast(msg){$("#toastMsg").textContent=msg;$("#toast").classList.add("sh
   clearTimeout(toastT);toastT=setTimeout(()=>$("#toast").classList.remove("show"),1900);}
 
 /* ---------- Portada ---------- */
-$("#enterBtn").onclick=()=>{S.onboarded=true;save();$("#cover").style.display="none";$("#app").style.display="block";go("hoy");};
+$("#enterBtn").onclick=()=>{S.onboarded=true;save();$("#cover").style.display="none";$("#app").style.display="block";go("hoy");renderDock(true);};
 $("#coverBtn").onclick=()=>{$("#cover").style.display="flex";$("#app").style.display="none";};
 
 /* ---------- Arranque ---------- */
-renderDock();
-if(S.onboarded){$("#cover").style.display="none";$("#app").style.display="block";go("hoy");}
+montarDock();
+if(S.onboarded){$("#cover").style.display="none";$("#app").style.display="block";go("hoy");renderDock(true);}
 else{go("hoy");}
 
 /* ---------- Anti-zoom (familia Stick) ----------

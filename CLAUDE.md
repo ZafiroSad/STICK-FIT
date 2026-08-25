@@ -1,5 +1,35 @@
 # STICK FIT — Bitácora del proyecto
 
+## Sincronización con STICK UI SYSTEM (2026-08-24)
+
+Pasada de consistencia visual de toda la familia Stick, con **STICK BUDGETS como referencia**. Al
+ser una app de un solo HTML, el sistema se replica sobre variables CSS propias con los mismos
+valores. Qué cambió:
+
+- **Presupuesto de duración** (`--t-toque` 140ms … `--t-lienzo` 420ms) y **resplandor de signo**
+  (`--glow-gain/-loss/-amber`), en ambos temas.
+- **Header sin barra**: `header.top` deja `sticky`, la superficie
+  (`color-mix(... var(--bg) 55% ...)` + `backdrop-filter`) y el `border-bottom`; ahora flota sobre
+  el campo con `padding-top: calc(env(safe-area-inset-top) + 2rem)`.
+- **Dock reescrito al canónico** (§4.5): ceñido a su contenido (antes `width:92%`), `bottom` a 16px
+  + safe area, `padding:6px`, `gap:4px`, y **una sola píldora blanca que viaja** — escrita en CSS+JS
+  porque acá no hay Motion: el JS solo escribe `--px` y `--pw`, el muelle lo pone la transición.
+  `renderDock` se partió en **`montarDock()`** (construye una vez) y **`renderDock()`** (solo mueve
+  la píldora): reescribir el `innerHTML` en cada cambio de vista destruía la píldora y la hacía
+  nacer de nuevo en su sitio, que es justo el efecto que el sistema no quiere. Recoloca en `resize`
+  y sale sin hacer nada si el dock está oculto (medir con `offsetWidth === 0` la dejaba en el borde).
+- **Las etiquetas del dock solo desde 640px**: con 5 pestañas y sus nombres el dock mide 574px y por
+  debajo de ese ancho se desbordaba de la pantalla (medido en vivo).
+- **Las 11 reglas `:hover` movidas a `@media (hover: hover) and (pointer: fine)`** — en táctil el
+  navegador dispara un hover falso al tocar y el elemento se queda levantado.
+- Botones-ícono de 32px a **40px táctil / 36px desde 640px**; contenido a 20px de padding
+  horizontal; `interactive-widget=resizes-content` en el viewport.
+
+**Verificado en vivo** (servidor HTTP local, no `file://`), en oscuro y claro: header `relative` sin
+fondo ni borde, dock de 302px centrado en 560px de viewport, píldora alineada al botón activo al
+píxel y viajando al cambiar de vista, botón de tema de 36px, padding de 20px. Nota: al abrir esta
+sesión, `service-worker.js` ya figuraba modificado en git — ese cambio no es de esta pasada.
+
 ## Descripción y objetivo
 App personal de entrenamiento de **fuerza** para el Señor Stick. Objetivo: construir un físico
 atlético, magro y funcional —no de culturista— mediante sobrecarga progresiva. Pensada para usarse
