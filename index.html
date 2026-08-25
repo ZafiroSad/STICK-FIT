@@ -325,14 +325,12 @@ html.light nav.dock{
   border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;
   color:var(--zinc-400);transition:color .15s var(--suave)}
 .dock-btn svg{width:16px;height:16px;stroke-width:2.4}
-.dock-btn .dl{display:none;font-size:11px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.05em;white-space:nowrap}
+/* La barra de navegacion JAMAS lleva texto, en ningun ancho — regla del
+   Senor Stick (STICK_UI_SYSTEM.md §4.5). El nombre de cada pestana viaja en
+   `aria-label` y `title`: el lector de pantalla y el tooltip lo dan igual,
+   sin ensanchar el dock ni competir con el icono. */
+.dock-btn .dl{display:none}
 .dock-btn.on{color:var(--contratinta)}
-.dock-btn.on .dl{display:inline}
-/* Las etiquetas solo desde 640px (el mismo corte `sm:` que usa STICK
-   BUDGETS): con 5 pestanas y sus nombres, el dock mide ~574px y por debajo
-   de ese ancho se desbordaria de la pantalla. */
-@media (min-width:640px){ .dock-btn .dl{display:inline} }
 @media (prefers-reduced-motion:reduce){ .dock-pildora{transition:none} }
 
 /* ── Ejercicio row (checklist) ── */

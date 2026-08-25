@@ -1,5 +1,17 @@
 # STICK FIT — Bitácora del proyecto
 
+## La barra de navegación jamás lleva texto (2026-08-24)
+
+Regla del Señor Stick para toda la familia: la navegación inferior es **solo íconos**, en cualquier
+ancho de pantalla y en cualquier estado, incluida la pestaña activa. El nombre de cada pestaña va en
+`aria-label` y `title` — el lector de pantalla lo anuncia igual y el puntero fino muestra el
+tooltip, así que no se pierde información, solo deja de ocupar espacio. Un dock de solo íconos
+además mide lo mismo en cualquier pantalla, que es lo que lo hace idéntico entre las seis apps.
+Anotada en `STICK_UI_SYSTEM.md` §4.5 (recuadro) y §8 (regla 3-ter-d).
+
+En esta app se quitó la regla `.dock-btn .dl{display:inline}` y su media query de 640px.
+Verificado en vivo: cero etiquetas visibles a 400px y a 900px, dock constante en 269px.
+
 ## Sincronización con STICK UI SYSTEM (2026-08-24)
 
 Pasada de consistencia visual de toda la familia Stick, con **STICK BUDGETS como referencia**. Al
