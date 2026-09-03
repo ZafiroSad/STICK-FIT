@@ -68,7 +68,7 @@ atlético, magro y funcional —no de culturista— mediante sobrecarga progresi
 repositorio. Los objetivos se describen por sus características físicas, no por referencias.
 
 ## Ubicación
-`C:\Users\kevin\Documents\KEVIN\02. WORK\03. PROYECTOS PERSONALES\STICK FIT\` (movida desde Downloads
+`C:\Users\kevin\Documents\KEVIN\02. WORK\03. STICK INDUSTRIES\01. STICK SUITE\STICK FIT\` (movida desde Downloads
 el 2026-08-01, junto a las demás apps de la familia Stick).
 
 ## Estado actual — ESTABLE (Tier 1 y 2 completos)

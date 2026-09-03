@@ -2,7 +2,7 @@
 # Maestro de referencia: LOGO.png (2000x2000). La geometria de abajo esta medida de ese archivo.
 Add-Type -AssemblyName System.Drawing
 
-$OUT = "C:\Users\kevin\Documents\KEVIN\02. WORK\03. PROYECTOS PERSONALES\STICK FIT"
+$OUT = "C:\Users\kevin\Documents\KEVIN\02. WORK\03. STICK INDUSTRIES\01. STICK SUITE\STICK FIT"
 $FG  = [System.Drawing.Color]::FromArgb(255, 255, 255) # #FFFFFF (logo 2026-08-06)
 $BG  = [System.Drawing.Color]::FromArgb(30, 31, 31)    # #1E1F1F
 
